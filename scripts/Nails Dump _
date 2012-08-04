@@ -1,0 +1,8 @@
+Nails Dump : 
+
+Routes : 
+	1. Match => Matches the route with the given controller#action eg: [ "/photos" : { match : "home#photos"} ]
+
+	2. Get => Matches the route with given controller#action via only GET eg: [ "/photos" : { get : "home#photos" } ]
+
+	3. Post => Matches the route with given controller#action via only POST [ "/photos" : { post : "home#photos" } ]
