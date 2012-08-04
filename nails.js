@@ -4,6 +4,7 @@
 // stuff like controllers, models e.t.c.
 
 var fs = require('fs');
+var log = require('./log');
 
 if(process.argv.length == 4) {
 	if(process.argv[2] == 'new') {
@@ -76,11 +77,7 @@ if(process.argv.length == 3) {
 		console.log("Server starting...");
 		console.log("Nails 0.1.0 application starting in development on http://localhost:3000");
 		console.log("Ctrl-C to shutdown the server");
-		var date = new Date();
-		console.log("["+ date.getFullYear()+"-"+date.getMonth()+"-"+date.getDate()+" "+
-						date.getHours()+":"+date.getMinutes()+":"+date.getSeconds() + "] "
-						+ "INFO  Node version : " + process.version);
-
+		log.info("Node version : " + process.version);
 
 	}
 }
