@@ -7,7 +7,7 @@ var fs = require('fs');
 var log = require('./log');
 
 if(process.argv.length == 4) {
-	if(process.argv[2] == 'new') {
+	if(process.argv[2] == 'needw') {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3]);
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3]);
 

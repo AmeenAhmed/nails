@@ -13,5 +13,5 @@ exports.start_server = function() {
 		//console.log(require.cache);
 		var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
 		res.end(router.route(req.url));
-	}).listen(3000,'127.0.0.1');	
+	}).listen(8080,'127.0.0.1');	
 }
