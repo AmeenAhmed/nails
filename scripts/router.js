@@ -81,8 +81,12 @@ function runAndRender(controllerName,actionName) {
 		return unknownAction(actionName,controllerName);
 	}
 	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
+	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
 	if(fs.existsSync(viewFileName)) {
-		return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
+		return  html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
+			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
+		}});
+		//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
 	} else {
 		return templateMissing(removeLeadingSlash(url));
 	}
