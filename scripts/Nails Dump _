@@ -1,8 +1,14 @@
 Nails Dump : 
 
 Routes : 
-	1. Match => Matches the route with the given controller#action eg: [ "/photos" : { match : "home#photos"} ]
+	1. Match => Matches the route with the given controller#action eg: [ "photos" : { match : "home#photos"} ]
 
-	2. Get => Matches the route with given controller#action via only GET eg: [ "/photos" : { get : "home#photos" } ]
+	2. Get => Matches the route with given controller#action via only GET eg: [ "photos" : { get : "home#photos" } ]
 
-	3. Post => Matches the route with given controller#action via only POST [ "/photos" : { post : "home#photos" } ]
+	3. Post => Matches the route with given controller#action via only POST [ "photos" : { post : "home#photos" } ]
+
+	4. via => Appears when a match param is given. specifies the methods to which the route will respond 
+		eg: [ "photos" : { match : "home#photos", via:"get|post"} ]
+
+	Notes :
+		a. A route cannot have both a match and get or post together because sinmply it doesn't make sense, If found the match only will have the highest priority
