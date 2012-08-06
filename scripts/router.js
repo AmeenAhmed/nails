@@ -76,7 +76,7 @@ function noRouteMatch(method,url) {
 	return '<h1>Routing Error</h1>' + 
 				'<p>No route macthes ['+method.toUpperCase()+'] "'+url+'"</p>';
 }
-function runAndRender(controllerName,actionName) {
+function runAndRender(controllerName,actionName,url) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
 		return noController(controllerName+'_controller');
 	}
@@ -120,5 +120,5 @@ function routeRequest(route,url,method) {
 	}
 
 	log.info('Found route ' + route);
-	return runAndRender(controllerName,actionName);
+	return runAndRender(controllerName,actionName,url);
 }
