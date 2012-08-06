@@ -4,7 +4,7 @@
 // It merely just sends the command line params it received to nails.js
 
 #include<stdio.h>
-
+#include<stdlib.h>
 
 void main(int argc,char *argv[]) {
 	
