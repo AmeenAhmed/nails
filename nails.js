@@ -65,11 +65,14 @@ if(process.argv.length == 4) {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public/css');
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3]+'/public/css' );
 
+		console.log('Creating file ' + process.cwd() + '/nmake.js');
+		fs.writeFileSync(process.cwd() + '/nmake.js','//contents still need to be added here');
+
 	}
 
 }
 
-if(process.argv.length == 3) {
+if(process.argv.length == 3 && fs.existsSync(process.cwd() + '/nmake.js')) {
 
 	if(process.argv[2] == 'server' || process.argv[2] == 's') {
 		var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
@@ -82,7 +85,7 @@ if(process.argv.length == 3) {
 	}
 }
 
-if(process.argv[2] == 'generate') {
+if(process.argv[2] == 'generate' && fs.existsSync(process.cwd() + '/nmake.js')) {
 	if(process.argv[3]) {
 		console.log('U asked me to generate this [' + process.argv[3] + ']');
 		if(process.argv[4]) {
