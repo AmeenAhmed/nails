@@ -2,13 +2,18 @@ var ejs = require('ejs');
 var fs = require('fs');
 var log = require('./../log');
 
+
 function initialize() {
 
 }
-exports.route = function(url,method) {
+exports.route = function(url,method,query) {
 	resource = 'resource';
 	var route_file = require(process.cwd() + '/config/routes.js');
 	method = method.toLowerCase();
+	var params = {};
+	if(query) {
+		params = queryParser(query);
+	}
 
 	if(url.match('.js')) {
 		console.log(url + ' js called!');
@@ -35,11 +40,11 @@ exports.route = function(url,method) {
 			return fs.readFileSync(process.cwd() + '/public/index.html');
 		}
 		
-		return routeRequest(route,url,method);
+		return routeRequest(route,url,method,params);
 	}
 	else if(route_file.routes[removeLeadingSlash(url)]) {
 		var route = route_file.routes[removeLeadingSlash(url)];
-		return routeRequest(route,url,method);
+		return routeRequest(route,url,method,params);
 	} else {
 		var urlSplit = url.split('/');
 		var rIndex = null;
@@ -67,7 +72,6 @@ exports.route = function(url,method) {
 			if(routeSplit[i].match(':')) {
 				var param = urlSplit[i+1];
 				var key = routeSplit[i].replace(':','');
-				var params = {};
 				params[key] = param;
 				console.log(params);
 				//console.log(key + ':' + param);
@@ -80,7 +84,15 @@ exports.route = function(url,method) {
 	}	
 		
 }
+function queryParser(query) {
+	var obj = {};
 
+	var params = query.split('&');
+	for(var i=0;i<params.length;i++) {
+		obj[params[i].split('=')[0]] = params[i].split('=')[1];
+	}
+	return obj;
+}
 function addLeadingSlash(str) {
 	if(str[0] != '/') {
 		return '/' + str;

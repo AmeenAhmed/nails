@@ -4,7 +4,7 @@
 
 exports.start_server = function() {
 	var http = require('http');
-	
+	var url = require('url');
 	http.createServer(function(req,res) {
 		console.log(req.url);
 		//res.end(req.url);
@@ -12,8 +12,7 @@ exports.start_server = function() {
 		// routesMod = require.resolve(process.cwd() + '/config/routes.js');
 		// delete require.cache[mod];
 		// delete require.cache[routesMod];
-		console.log(require('module')._cache={});
-		console.log(require('module')._cache);		
+		require('module')._cache={};
 		//delete require.cache[key];
 		
 		//console.log(require.cache);
@@ -23,7 +22,10 @@ exports.start_server = function() {
 		} else if(req.url.match('.css')) {
 			res.setHeader('Content-Type','text/css');
 		}
-		var response = router.route(req.url,req.method);
+		var reqUrl = url.parse(req.url); 
+		console.log('path : '+reqUrl.pathname);
+		console.log('query : '+reqUrl.query);
+		var response = router.route(reqUrl.pathname,req.method,reqUrl.query);
 		if(response == '404') {
 			res.statusCode = 404;
 			response = '';
