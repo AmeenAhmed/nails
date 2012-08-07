@@ -196,6 +196,7 @@ function routeRequest(route,url,method,params) {
 		controllerName = controllerFromRoute(route.get);
 		actionName = actionFromRoute(route.get);
 	} else if(route.post && method == 'post') {
+		controllerName = controllerFromRoute(route.post);
 		actionName = actionFromRoute(route.post);
 	} else {
 		return noRouteMatch(method,url);

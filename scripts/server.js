@@ -22,14 +22,30 @@ exports.start_server = function() {
 		} else if(req.url.match('.css')) {
 			res.setHeader('Content-Type','text/css');
 		}
-		var reqUrl = url.parse(req.url); 
-		console.log('path : '+reqUrl.pathname);
-		console.log('query : '+reqUrl.query);
-		var response = router.route(reqUrl.pathname,req.method,reqUrl.query);
 		if(response == '404') {
 			res.statusCode = 404;
 			response = '';
 		}
-		res.end(response);
+		if(req.method == 'GET') {
+			var reqUrl = url.parse(req.url); 
+			console.log('path : '+reqUrl.pathname);
+			console.log('query : '+reqUrl.query);
+			var response = router.route(reqUrl.pathname,req.method,reqUrl.query);
+			
+			res.end(response);
+		} else if(req.method == 'POST') {
+			var postData = '';
+			req.on('data',function(chunk) {
+				console.log('incoming data : ' + chunk);
+				postData += chunk;
+			});
+
+			req.on('end',function() {
+				console.log('postData :' + postData);
+				var response = router.route(req.url,req.method,postData);
+				console.log('post data end');
+				res.end(response);
+			});
+		}
 	}).listen(8080,'127.0.0.1');	
 }
