@@ -7,7 +7,7 @@ var fs = require('fs');
 var log = require('./log');
 
 if(process.argv.length == 4) {
-	if(process.argv[2] == 'needw') {
+	if(process.argv[2] == 'new') {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3]);
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3]);
 
@@ -65,8 +65,8 @@ if(process.argv.length == 4) {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public/css');
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3]+'/public/css' );
 
-		console.log('Creating file ' + process.cwd() + '/nmake.js');
-		fs.writeFileSync(process.cwd() + '/nmake.js','//contents still need to be added here');
+		console.log('Creating file ' + process.cwd()+'/'+process.argv[3] + '/nmake.js');
+		fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/nmake.js','//contents still need to be added here');
 
 	}
 

@@ -74,11 +74,18 @@ function unknownAction(action,controller) {
 	return '<h1>Unknown Action</h1>' +
 			'<p>The action \''+action+'\' could not be found for '+controller+'Controller</p>';
 }
+function noController(controller) {
+	return '<h1>Routing Error</h1>' + 
+			'<p>The controller ' + controller + ' could not be found'
+}
 function noRouteMatch(method,url) {
 	return '<h1>Routing Error</h1>' + 
 				'<p>No route macthes ['+method.toUpperCase()+'] "'+url+'"</p>';
 }
-function runAndRender(controllerName,actionName) {
+function runAndRender(controllerName,actionName,url) {
+	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
+		return noController(controllerName+'_controller');
+	}
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
 	controller[controllerName].data = {};
 	if(controller[controllerName][actionName]) {
@@ -130,5 +137,5 @@ function routeRequest(route,url,method) {
 	}
 
 	log.info('Found route ' + route);
-	return runAndRender(controllerName,actionName);
+	return runAndRender(controllerName,actionName,url);
 }
