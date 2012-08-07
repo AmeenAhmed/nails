@@ -4,6 +4,22 @@ var log = require('./../log');
 exports.route = function(url,method) {
 	var route_file = require(process.cwd() + '/config/routes.js');
 	method = method.toLowerCase();
+
+	if(url.match('.js')) {
+		console.log(url + ' js called!');
+		if(fs.existsSync(process.cwd() + '/public/js' + url)) {
+			return fs.readFileSync(process.cwd() + '/public/js' + url,'utf-8');
+		} else {
+			return '404';
+		}
+	}
+	if(url.match('.css')) {
+		if(fs.existsSync(process.cwd() + '/public/css' + url)) {
+			return fs.readFileSync(process.cwd() + '/public/css' + url,'utf-8');
+		} else {
+			return '404';
+		}	
+	}
 	if(url == '/') {
 		var route = '';
 		console.log(route_file);
@@ -17,16 +33,6 @@ exports.route = function(url,method) {
 		return routeRequest(route,url,method);
 	}
 	else if(route_file.routes[removeLeadingSlash(url)]) {
-		// console.log('route match');
-		// var route = route_file.routes[url];
-		// var tokens = route.split('#');
-		// console.log(tokens);
-		// var controller = require(process.cwd() + '/' + tokens[0] + '.js');
-		// controller[tokens[0]].data = {};
-		// controller[tokens[0]][tokens[1]]();
-		// return ejs.render(fs.readFileSync(process.cwd() +'/'+ tokens[1] +'_view.js','utf-8'),
-		// 		{data:controller[tokens[0]].data});
-		
 		var route = route_file.routes[removeLeadingSlash(url)];
 		return routeRequest(route,url,method);
 	} else {
@@ -85,7 +91,18 @@ function runAndRender(controllerName,actionName) {
 	if(fs.existsSync(viewFileName)) {
 		return  html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
 			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
-		}});
+		}, 
+		scripts: function() {
+			
+			var scriptsHtml = '';
+			var fileList = fs.readdirSync(process.cwd() + '/public/js');
+			return fileList;
+		
+		},
+		styles: function() {
+
+		}
+	});
 		//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
 	} else {
 		return templateMissing(removeLeadingSlash(url));

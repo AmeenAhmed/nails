@@ -18,6 +18,16 @@ exports.start_server = function() {
 		
 		//console.log(require.cache);
 		var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
-		res.end(router.route(req.url,req.method));
+		if(req.url.match('.js')) {
+			res.setHeader('Content-Type','text/javascript');
+		} else if(req.url.match('.css')) {
+			res.setHeader('Content-Type','text/css');
+		}
+		var response = router.route(req.url,req.method);
+		if(response == '404') {
+			res.statusCode = 404;
+			response = '';
+		}
+		res.end(response);
 	}).listen(8080,'127.0.0.1');	
 }
