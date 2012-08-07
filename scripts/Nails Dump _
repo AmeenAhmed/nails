@@ -10,5 +10,9 @@ Routes :
 	4. via => Appears when a match param is given. specifies the methods to which the route will respond 
 		eg: [ "photos" : { match : "home#photos", via:"get|post"} ]
 
+	5. Match : resource => Matches a controller to a number of default resourceful routes(given below)
+
+	
+
 	Notes :
 		a. A route cannot have both a match and get or post together because sinmply it doesn't make sense, If found the match only will have the highest priority
