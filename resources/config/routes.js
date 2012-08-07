@@ -9,7 +9,11 @@ exports.routes = {
 
 	//"update_item" : { post : "home#update_item" }, 
 
-	//"products/:id" : { get : "products#show" },
+	//"products/:name" : { get : "products#show" },
+	
 
 	//"products/show/*" : { get : "products#show" }
+
+	// products : { match : 'resource', only: 'index|show' }
+
 }

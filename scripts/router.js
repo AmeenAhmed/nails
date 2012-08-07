@@ -1,7 +1,12 @@
 var ejs = require('ejs');
 var fs = require('fs');
 var log = require('./../log');
+
+function initialize() {
+
+}
 exports.route = function(url,method) {
+	resource = 'resource';
 	var route_file = require(process.cwd() + '/config/routes.js');
 	method = method.toLowerCase();
 
@@ -36,6 +41,40 @@ exports.route = function(url,method) {
 		var route = route_file.routes[removeLeadingSlash(url)];
 		return routeRequest(route,url,method);
 	} else {
+		var urlSplit = url.split('/');
+		var rIndex = null;
+		console.log(urlSplit);
+		for(var r in route_file.routes) {
+			//console.log('48 : ' + r + ':' + route_file.routes[r]);
+			//console.log(urlSplit[1].length);
+			//console.log(r.match(urlSplit[0]+'/'));
+			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/')) {
+				//console.log('match!')
+				rIndex = r; 
+				break;
+			}
+		}
+
+		if(rIndex == null) {
+			return noRouteMatch(method,url);
+		} 
+
+		console.log(route_file.routes[rIndex]);
+		var routeSplit = rIndex.split('/');
+		var route = route_file.routes[rIndex];
+		for(var i=0;i<routeSplit.length;i++) {
+			//console.log(routeSplit[i].match(':'));
+			if(routeSplit[i].match(':')) {
+				var param = urlSplit[i+1];
+				var key = routeSplit[i].replace(':','');
+				var params = {};
+				params[key] = param;
+				console.log(params);
+				//console.log(key + ':' + param);
+				return routeRequest(route,url,method,params);
+			}
+		}
+
 		return noRouteMatch(method,url);
 		console.log('no route ' + url);
 	}	
@@ -82,12 +121,13 @@ function noRouteMatch(method,url) {
 	return '<h1>Routing Error</h1>' + 
 				'<p>No route macthes ['+method.toUpperCase()+'] "'+url+'"</p>';
 }
-function runAndRender(controllerName,actionName,url) {
+function runAndRender(controllerName,actionName,url,params) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
 		return noController(controllerName+'_controller');
 	}
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
 	controller[controllerName].data = {};
+	controller[controllerName].params = params
 	if(controller[controllerName][actionName]) {
 		controller[controllerName][actionName]();
 	} else {
@@ -103,10 +143,23 @@ function runAndRender(controllerName,actionName,url) {
 			
 			var scriptsHtml = '';
 			var fileList = fs.readdirSync(process.cwd() + '/public/js');
-			return fileList;
+
+			for(var i=0;i<fileList.length;i++) {
+				scriptsHtml += '<script type="text/javascript" src="/'+fileList[i]+
+							'"></script>\n';
+			}
+			return scriptsHtml;
 		
 		},
 		styles: function() {
+			var stylesHtml = '';
+			var fileList = fs.readdirSync(process.cwd() + '/public/css');
+
+			for(var i=0;i<fileList.length;i++) {
+				stylesHtml += '<link rel="stylesheet" type="text/css" href="/'+fileList[i]+
+							'" />\n';
+			}
+			return stylesHtml;
 
 		}
 	});
@@ -116,7 +169,7 @@ function runAndRender(controllerName,actionName,url) {
 	}
 }
 
-function routeRequest(route,url,method) {
+function routeRequest(route,url,method,params) {
 	var controllerName = '';
 	var actionName = '';
 	if(route.match) { 
@@ -137,5 +190,5 @@ function routeRequest(route,url,method) {
 	}
 
 	log.info('Found route ' + route);
-	return runAndRender(controllerName,actionName,url);
+	return runAndRender(controllerName,actionName,url,params);
 }
