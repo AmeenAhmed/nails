@@ -3,12 +3,27 @@ var fs = require('fs');
 var log = require('./../log');
 
 
-function initialize() {
+function initialize(routes) {
+
+	for(var key in routes) {
+		
+		if(routes[key].match) {
+			if(routes[key].match == 'resource') {
+				console.log('resource found : ' + key);
+				routes[key] = {get:key+'#index', post:key+'#create'};
+				routes[key+'/new'] = {get:key+'#new'};
+				routes[key+'/:id'] = {get:key+'#show', put:key+'#update', delete:key+'#destroy'};
+				routes[key+'/:id/edit'] = {get:key+'#edit'};
+				
+			}
+		}
+	}
 
 }
 exports.route = function(url,method,query) {
-	resource = 'resource';
+	
 	var route_file = require(process.cwd() + '/config/routes.js');
+	initialize(route_file.routes);
 	method = method.toLowerCase();
 	var params = {};
 	if(query) {
@@ -53,9 +68,15 @@ exports.route = function(url,method,query) {
 			//console.log('48 : ' + r + ':' + route_file.routes[r]);
 			//console.log(urlSplit[1].length);
 			//console.log(r.match(urlSplit[0]+'/'));
-			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/')) {
+
+			if(urlSplit.length-1 != r.split("/").length) {
+				continue;
+			}
+			console.log('Hurray got here : urlSplit : '+urlSplit);
+			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/') && r.split('/')[1].match(':')) {
 				//console.log('match!')
 				rIndex = r; 
+				console.log('Found with id');
 				break;
 			}
 		}
@@ -198,6 +219,13 @@ function routeRequest(route,url,method,params) {
 	} else if(route.post && method == 'post') {
 		controllerName = controllerFromRoute(route.post);
 		actionName = actionFromRoute(route.post);
+	} else if(route.put && method == 'put') {
+		controllerName = controllerFromRoute(route.put);
+		actionName = actionFromRoute(route.put);
+
+	} else if(route.delete && method == 'delete') {
+		controllerName = controllerFromRoute(route.delete);
+		actionName = actionFromRoute(route.delete);		
 	} else {
 		return noRouteMatch(method,url);
 	}

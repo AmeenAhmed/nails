@@ -26,14 +26,15 @@ exports.start_server = function() {
 			res.statusCode = 404;
 			response = '';
 		}
-		if(req.method == 'GET') {
+		console.log("The http  method : " + req.method);
+		if(req.method == 'GET' || req.method == 'DELETE') {
 			var reqUrl = url.parse(req.url); 
 			console.log('path : '+reqUrl.pathname);
 			console.log('query : '+reqUrl.query);
 			var response = router.route(reqUrl.pathname,req.method,reqUrl.query);
 			
 			res.end(response);
-		} else if(req.method == 'POST') {
+		} else if(req.method == 'POST' || req.method == 'PUT') {
 			var postData = '';
 			req.on('data',function(chunk) {
 				console.log('incoming data : ' + chunk);
