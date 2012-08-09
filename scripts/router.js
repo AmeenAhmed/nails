@@ -1,7 +1,8 @@
 var ejs = require('ejs');
 var fs = require('fs');
 var log = require('./../log');
-
+var sqlite = require('sqlite')
+;
 
 function initialize(routes) {
 
@@ -19,6 +20,11 @@ function initialize(routes) {
 		}
 	}
 
+}
+function addGlobals() {
+	global.redirect = function() {
+		
+	}
 }
 exports.route = function(url,method,query) {
 	
@@ -68,7 +74,12 @@ exports.route = function(url,method,query) {
 			//console.log('48 : ' + r + ':' + route_file.routes[r]);
 			//console.log(urlSplit[1].length);
 			//console.log(r.match(urlSplit[0]+'/'));
-
+			// console.log('--------------------------------');
+			// console.log('urlSplit : ' + urlSplit);
+			// console.log('r : ' + r.split("/"));
+			// console.log('urlSplit.length-1 : ' + urlSplit.length-1);
+			// console.log('r : ' + r.split("/").length);
+			// console.log('--------------------------------');
 			if(urlSplit.length-1 != r.split("/").length) {
 				continue;
 			}
@@ -109,8 +120,9 @@ function queryParser(query) {
 	var obj = {};
 
 	var params = query.split('&');
+
 	for(var i=0;i<params.length;i++) {
-		obj[params[i].split('=')[0]] = params[i].split('=')[1];
+		obj['_'+params[i].split('=')[0]] = params[i].split('=')[1];
 	}
 	return obj;
 }
@@ -144,7 +156,7 @@ function templateMissing(url) {
 }
 function unknownAction(action,controller) {
 	return '<h1>Unknown Action</h1>' +
-			'<p>The action \''+action+'\' could not be found for '+controller+'Controller</p>';
+			'<p>The action \''+action+'\' could not be found for '+controller+'_controller</p>';
 }
 function noController(controller) {
 	return '<h1>Routing Error</h1>' + 

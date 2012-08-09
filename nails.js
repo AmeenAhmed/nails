@@ -17,6 +17,9 @@ if(process.argv.length == 4) {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/config');
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/config');
 
+		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/db');
+		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/db');
+
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public');
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/public');
 
@@ -40,6 +43,11 @@ if(process.argv.length == 4) {
 		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/config/routes.js');
 		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/routes.js' ,
 				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/routes.js','utf-8'),
+				'utf-8');
+
+		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/config/environment.js');
+		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/environment.js' ,
+				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/environment.js','utf-8'),
 				'utf-8');
 
 		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/public/404.html');
@@ -101,6 +109,12 @@ if(process.argv[2] == 'generate' && fs.existsSync(process.cwd() + '/nmake.js')) 
 			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');
 		}
 	}
+}
+
+if(process.argv[2] == 'db:create') {
+	var environment_file = require(process.cwd() + '/config/environment.js');
+	var dbname = environment_file.environment;
+	console.log("Creating a database in " + dbname + ' environment');
 }
 
 if(process.argv[2] == 'check') {
