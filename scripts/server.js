@@ -14,7 +14,18 @@ exports.start_server = function() {
 		// delete require.cache[routesMod];
 		require('module')._cache={};
 		//delete require.cache[key];
-		
+
+		var token = '';
+
+		for(var i=0;i<32;i++) {
+			token += Math.floor(Math.random() * 10);
+		}
+		console.log('token : ' + token);
+
+		global[token] = {};
+		global[token].req = req;
+		global[token].res = res;
+
 		//console.log(require.cache);
 		var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
 		if(req.url.match('.js')) {
@@ -31,9 +42,15 @@ exports.start_server = function() {
 			var reqUrl = url.parse(req.url); 
 			console.log('path : '+reqUrl.pathname);
 			console.log('query : '+reqUrl.query);
-			var response = router.route(reqUrl.pathname,req.method,reqUrl.query);
-			
-			res.end(response);
+			var response = router.route(reqUrl.pathname,req.method,reqUrl.query,token);
+			console.log('response split ===================================>' + response.split(' ')[0]);
+			if(response.split(' ')[0] == '302') {
+				res.statusCode = 302;
+				res.setHeader("Location", response.split(' ')[1]);
+				res.end();
+			} else {			
+				res.end(response);
+			}
 		} else if(req.method == 'POST' || req.method == 'PUT') {
 			var postData = '';
 			req.on('data',function(chunk) {
@@ -43,7 +60,7 @@ exports.start_server = function() {
 
 			req.on('end',function() {
 				console.log('postData :' + postData);
-				var response = router.route(req.url,req.method,postData);
+				var response = router.route(req.url,req.method,postData,token);
 				console.log('post data end');
 				res.end(response);
 			});

@@ -1,5 +1,5 @@
-var sliqte = require('sqlite3').verbose();
+var sqlite = require('sqlite3').verbose();
 
-exports.create = function() {
+exports.create = function(name) {
 	
 }

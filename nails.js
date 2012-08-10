@@ -6,6 +6,7 @@
 var fs = require('fs');
 var log = require('./log');
 
+
 if(process.argv.length == 4) {
 	if(process.argv[2] == 'new') {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3]);

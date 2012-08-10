@@ -1,8 +1,9 @@
 var ejs = require('ejs');
 var fs = require('fs');
 var log = require('./../log');
-var sqlite = require('sqlite')
-;
+var dispatcher = require('./dispatcher');
+var dbase = require('./dbase');
+var helpers = require('./helpers');
 
 function initialize(routes) {
 
@@ -20,13 +21,10 @@ function initialize(routes) {
 		}
 	}
 
+
 }
-function addGlobals() {
-	global.redirect = function() {
-		
-	}
-}
-exports.route = function(url,method,query) {
+
+exports.route = function(url,method,query,token) {
 	
 	var route_file = require(process.cwd() + '/config/routes.js');
 	initialize(route_file.routes);
@@ -61,30 +59,25 @@ exports.route = function(url,method,query) {
 			return fs.readFileSync(process.cwd() + '/public/index.html');
 		}
 		
-		return routeRequest(route,url,method,params);
+		return routeRequest(route,url,method,params,token);
 	}
 	else if(route_file.routes[removeLeadingSlash(url)]) {
 		var route = route_file.routes[removeLeadingSlash(url)];
-		return routeRequest(route,url,method,params);
+		return routeRequest(route,url,method,params,token);
 	} else {
 		var urlSplit = url.split('/');
 		var rIndex = null;
 		console.log(urlSplit);
 		for(var r in route_file.routes) {
-			//console.log('48 : ' + r + ':' + route_file.routes[r]);
-			//console.log(urlSplit[1].length);
-			//console.log(r.match(urlSplit[0]+'/'));
-			// console.log('--------------------------------');
-			// console.log('urlSplit : ' + urlSplit);
-			// console.log('r : ' + r.split("/"));
-			// console.log('urlSplit.length-1 : ' + urlSplit.length-1);
-			// console.log('r : ' + r.split("/").length);
-			// console.log('--------------------------------');
+
 			if(urlSplit.length-1 != r.split("/").length) {
 				continue;
 			}
 			console.log('Hurray got here : urlSplit : '+urlSplit);
-			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/') && r.split('/')[1].match(':')) {
+			if(r.split('/')[1]) {
+				console.log('r.split(\'/\')[1].match(\':\')  : '+r.split('/')[1].match(':'));
+			}
+			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/') && r.split('/')[1].match(':')	) {
 				//console.log('match!')
 				rIndex = r; 
 				console.log('Found with id');
@@ -107,7 +100,7 @@ exports.route = function(url,method,query) {
 				params[key] = param;
 				console.log(params);
 				//console.log(key + ':' + param);
-				return routeRequest(route,url,method,params);
+				return routeRequest(route,url,method,params,token);
 			}
 		}
 
@@ -166,55 +159,9 @@ function noRouteMatch(method,url) {
 	return '<h1>Routing Error</h1>' + 
 				'<p>No route macthes ['+method.toUpperCase()+'] "'+url+'"</p>';
 }
-function runAndRender(controllerName,actionName,url,params) {
-	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
-		return noController(controllerName+'_controller');
-	}
-	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
-	controller[controllerName].data = {};
-	controller[controllerName].params = params
-	if(controller[controllerName][actionName]) {
-		controller[controllerName][actionName]();
-	} else {
-		return unknownAction(actionName,controllerName);
-	}
-	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
-	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
-	if(fs.existsSync(viewFileName)) {
-		return  html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
-			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
-		}, 
-		scripts: function() {
-			
-			var scriptsHtml = '';
-			var fileList = fs.readdirSync(process.cwd() + '/public/js');
 
-			for(var i=0;i<fileList.length;i++) {
-				scriptsHtml += '<script type="text/javascript" src="/'+fileList[i]+
-							'"></script>\n';
-			}
-			return scriptsHtml;
-		
-		},
-		styles: function() {
-			var stylesHtml = '';
-			var fileList = fs.readdirSync(process.cwd() + '/public/css');
 
-			for(var i=0;i<fileList.length;i++) {
-				stylesHtml += '<link rel="stylesheet" type="text/css" href="/'+fileList[i]+
-							'" />\n';
-			}
-			return stylesHtml;
-
-		}
-	});
-		//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
-	} else {
-		return templateMissing(removeLeadingSlash(url));
-	}
-}
-
-function routeRequest(route,url,method,params) {
+function routeRequest(route,url,method,params,token) {
 	var controllerName = '';
 	var actionName = '';
 	if(route.match) { 
@@ -243,5 +190,5 @@ function routeRequest(route,url,method,params) {
 	}
 
 	log.info('Found route ' + route);
-	return runAndRender(controllerName,actionName,url,params);
+	return dispatcher.runAndRender(controllerName,actionName,url,params,token);
 }
