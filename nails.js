@@ -80,8 +80,9 @@ if(process.argv.length == 4) {
 
 }
 
-if(process.argv.length == 3 && fs.existsSync(process.cwd() + '/nmake.js')) {
-
+if(!fs.existsSync(process.cwd() + '/nmake.js')) {
+	console.log('Not in a nails application folder');
+}
 	if(process.argv[2] == 'server' || process.argv[2] == 's') {
 		var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
 		server.start_server();
@@ -91,7 +92,7 @@ if(process.argv.length == 3 && fs.existsSync(process.cwd() + '/nmake.js')) {
 		log.info("Node version : " + process.version);
 
 	}
-}
+
 
 if(process.argv[2] == 'generate' && fs.existsSync(process.cwd() + '/nmake.js')) {
 	if(process.argv[3]) {
@@ -115,6 +116,47 @@ if(process.argv[2] == 'db:create') {
 	var environment_file = require(process.cwd() + '/config/environment.js');
 	var dbname = environment_file.environment;
 	console.log("Creating a database in " + dbname + ' environment');
+}
+
+if(process.argv[2] == 'env') {
+	var environment_file = require(process.cwd() + '/config/environment.js');
+	var env = environment_file.environment;
+
+	if(!process.argv[3]) {
+		console.log('current environment [' + env + ']');
+		return;
+	}
+
+	
+	var dev = 'exports.environment = \'development\';';
+	var test = 'exports.environment = \'test\';';
+	var prod = 'exports.environment = \'production\';';
+	var file = process.cwd() + '/config/environment.js';
+	if(process.argv[3] == 'production') {
+		if(env == 'production') {
+			console.log('You are already in production');
+		} else {
+			fs.unlink(process.cwd() + '/config/environment.js');
+			fs.writeFileSync(file,prod+'\n\n'+'//'+test+'\n//'+dev,'utf-8');
+		}
+	} else if(process.argv[3] == 'test') {
+		if(env == 'test') {
+			console.log('You are already in test');
+		} else {
+			fs.unlink(process.cwd() + '/config/environment.js');	
+			fs.writeFileSync(file,test+'\n\n'+'//'+prod+'\n//'+dev,'utf-8');
+		}
+
+	} else if(process.argv[3] == 'development') {
+		if(env == 'development') {
+			console.log('You are already in development');
+		} else {
+			fs.unlink(process.cwd() + '/config/environment.js');
+			fs.writeFileSync(file,dev+'\n\n'+'//'+test+'\n//'+prod,'utf-8');
+		}
+	} else {
+		console.log('Wrong development environment [' + process.argv[3]+']');
+	}
 }
 
 if(process.argv[2] == 'check') {
