@@ -1,29 +1,63 @@
 var fs = require('fs');
 var ejs = require('ejs');
 var helpers = require('./helpers');
-exports.runAndRender = function(controllerName,actionName,url,params,token) {
+var vm = require('vm');
+var exceptions = require('./exceptions');
+var utils = require('./utils');
+
+exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
-		return noController(controllerName+'_controller');
+		return exceptions.noController(controllerName+'_controller');
 	}
 
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
-	controller[controllerName].data = {};
-	controller[controllerName].params = params
-	controller[controllerName].token = token
+	/*controller[controllerName][actionName].data = {};
+	controller[controllerName][actionName].params = params
+	controller[controllerName].token = token */
+	// test code to test the possibility of using the vm module to execute the action code.
+	//-------------------------------------------------------------------------------------
+	var context = {
 
-	controller[controllerName].redirect_to = helpers.redirect_to;
+	}
+	context.data = {};
+	context.params = params;
+	context.redirect_to = helpers.redirect_to;
+	
+	for(var key in route_helpers) {
+		context[key] = route_helpers[key];
+	}	
+
+
+	//controller[controllerName].redirect_to = helpers.redirect_to;
 
 	if(controller[controllerName][actionName]) {
-		var res = controller[controllerName][actionName]();
-		
+		//var res = controller[controllerName][actionName]();
+		var actionFunction = controller[controllerName][actionName].toString().replace('function ()','');
+
+		var res = vm.runInNewContext(actionFunction,context);
+		if(res) {
+			if(res.status == 302) {
+				response.statusCode = 302;
+				response.setHeader("Location", res.response);
+				response.end();
+			}
+		}
 	} else {
-		return unknownAction(actionName,controllerName);
+		return exceptions.unknownAction(actionName,controllerName);
 	}
 	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
 	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
+
+	var viewContext = {};
+	viewContext['data'] = context.data;
+
+	for(var key in route_helpers) {
+		viewContext[key] = route_helpers[key];
+	}	
+
 	if(fs.existsSync(viewFileName)) {
 		return  html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
-			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
+			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), viewContext);
 		}, 
 		scripts: function() {
 			
@@ -51,6 +85,6 @@ exports.runAndRender = function(controllerName,actionName,url,params,token) {
 	});
 		//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
 	} else {
-		return templateMissing(removeLeadingSlash(url));
+		return exceptions.templateMissing(utils.removeLeadingSlash(url));
 	}
 }

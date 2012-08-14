@@ -42,7 +42,7 @@ exports.start_server = function() {
 			var reqUrl = url.parse(req.url); 
 			console.log('path : '+reqUrl.pathname);
 			console.log('query : '+reqUrl.query);
-			var response = router.route(reqUrl.pathname,req.method,reqUrl.query,token);
+			var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res);
 			console.log('response split ===================================>' + response.split(' ')[0]);
 			if(response.split(' ')[0] == '302') {
 				res.statusCode = 302;
@@ -60,7 +60,7 @@ exports.start_server = function() {
 
 			req.on('end',function() {
 				console.log('postData :' + postData);
-				var response = router.route(req.url,req.method,postData,token);
+				var response = router.route(req.url,req.method,postData,req,res);
 				console.log('post data end');
 				res.end(response);
 			});

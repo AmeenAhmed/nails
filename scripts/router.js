@@ -4,34 +4,58 @@ var log = require('./../log');
 var dispatcher = require('./dispatcher');
 var dbase = require('./dbase');
 var helpers = require('./helpers');
+var exceptions = require('./exceptions');
+var utils = require('./utils');
 
 function initialize(routes) {
-
+	var named_routes = {};
+	console.log(routes);
 	for(var key in routes) {
 		
-		if(routes[key].match) {
-			if(routes[key].match == 'resource') {
-				console.log('resource found : ' + key);
-				routes[key] = {get:key+'#index', post:key+'#create'};
-				routes[key+'/new'] = {get:key+'#new'};
-				routes[key+'/:id'] = {get:key+'#show', put:key+'#update', delete:key+'#destroy'};
-				routes[key+'/:id/edit'] = {get:key+'#edit'};
+		if(routes[key].match == 'resource') {
+			
+			console.log('resource found : ' + key);
+			routes[key] = {get:key+'#index', post:key+'#create'};
+			routes[key+'/new'] = {get:key+'#new'};
+			routes[key+'/:id'] = {get:key+'#show', put:key+'#update', delete:key+'#destroy'};
+			routes[key+'/:id/edit'] = {get:key+'#edit'};
+
+			named_routes[key + '_path'] = utils.createRouteHelper('/' + key);
+			named_routes['new_' + key + '_path'] = utils.createRouteHelper('/' + key + '/new');
+			named_routes['edit_' + key + '_path(:id)'] = utils.createRouteHelper('/' + key + '/:id/edit');
 				
+			
+		} else if(routes[key]['as']) {
+			console.log('We have an as : ' + routes[key].as);
+			var route = key;
+			var helper_method = routes[key].as;
+			named_routes[helper_method + '_path'] = utils.createRouteHelper('/' + route);
+		} else if(!key.match(':')) {
+			var route = key;
+			var parts = key.split('/');
+			var helper_method = '';
+			for(var i=0;i<parts.length-1;i++) {
+				helper_method += parts[i] + '_';
 			}
+			helper_method += parts[i];
+			named_routes[helper_method] = utils.createRouteHelper('/' + key);
 		}
 	}
-
-
+	console.log('****************************************');
+	console.log(named_routes);
+	console.log('****************************************');
+	return named_routes;
 }
 
-exports.route = function(url,method,query,token) {
+
+exports.route = function(url,method,query,req,res) {
 	
 	var route_file = require(process.cwd() + '/config/routes.js');
-	initialize(route_file.routes);
+	var route_helpers = initialize(route_file.routes);
 	method = method.toLowerCase();
 	var params = {};
 	if(query) {
-		params = queryParser(query);
+		params = utils.queryParser(query);
 	}
 
 	if(url.match('.js')) {
@@ -59,11 +83,11 @@ exports.route = function(url,method,query,token) {
 			return fs.readFileSync(process.cwd() + '/public/index.html');
 		}
 		
-		return routeRequest(route,url,method,params,token);
+		return routeRequest(route,url,method,params,req,res,route_helpers);
 	}
-	else if(route_file.routes[removeLeadingSlash(url)]) {
-		var route = route_file.routes[removeLeadingSlash(url)];
-		return routeRequest(route,url,method,params,token);
+	else if(route_file.routes[utils.removeLeadingSlash(url)]) {
+		var route = route_file.routes[utils.removeLeadingSlash(url)];
+		return routeRequest(route,url,method,params,req,res,route_helpers);
 	} else {
 		var urlSplit = url.split('/');
 		var rIndex = null;
@@ -86,7 +110,7 @@ exports.route = function(url,method,query,token) {
 		}
 
 		if(rIndex == null) {
-			return noRouteMatch(method,url);
+			return exceptions.noRouteMatch(method,url);
 		} 
 
 		console.log(route_file.routes[rIndex]);
@@ -100,95 +124,48 @@ exports.route = function(url,method,query,token) {
 				params[key] = param;
 				console.log(params);
 				//console.log(key + ':' + param);
-				return routeRequest(route,url,method,params,token);
+				return routeRequest(route,url,method,params,req,res,route_helpers);
 			}
 		}
 
-		return noRouteMatch(method,url);
+		return exceptions.noRouteMatch(method,url);
 		console.log('no route ' + url);
 	}	
 		
 }
-function queryParser(query) {
-	var obj = {};
-
-	var params = query.split('&');
-
-	for(var i=0;i<params.length;i++) {
-		obj['_'+params[i].split('=')[0]] = params[i].split('=')[1];
-	}
-	return obj;
-}
-function addLeadingSlash(str) {
-	if(str[0] != '/') {
-		return '/' + str;
-	}
-	return str;
-}
-
-function removeLeadingSlash(str) {
-	if(str[0] == '/') {
-		return str.replace('/',''); 
-	}	
-	return str;
-}
-
-function controllerFromRoute(r) {
-	var tokens = r.split('#');
-	return tokens[0];
-}
-
-function actionFromRoute(r) {
-	var tokens = r.split('#');
-	return tokens[1];
-}
-
-function templateMissing(url) {
-	return '<h1>Template is Missing</h1>' +
-			'<p>Missing template '+url+', Searched in : '+process.cwd()+'/app/views</p>';
-}
-function unknownAction(action,controller) {
-	return '<h1>Unknown Action</h1>' +
-			'<p>The action \''+action+'\' could not be found for '+controller+'_controller</p>';
-}
-function noController(controller) {
-	return '<h1>Routing Error</h1>' + 
-			'<p>The controller ' + controller + ' could not be found'
-}
-function noRouteMatch(method,url) {
-	return '<h1>Routing Error</h1>' + 
-				'<p>No route macthes ['+method.toUpperCase()+'] "'+url+'"</p>';
-}
 
 
-function routeRequest(route,url,method,params,token) {
+
+
+
+function routeRequest(route,url,method,params,req,res,route_helpers) {
 	var controllerName = '';
 	var actionName = '';
 	if(route.match) { 
 		console.log('Method match is found');
 		if(route.via && route.via.indexOf(method) == -1) {
-			return noRouteMatch(method,url);
+			return exceptions.noRouteMatch(method,url);
 		} 
-		controllerName = controllerFromRoute(route.match);
-		actionName = actionFromRoute(route.match);
+		controllerName = utils.controllerFromRoute(route.match);
+		actionName = utils.actionFromRoute(route.match);
 		console.log(controllerName+'@'+actionName);
 	} else if(route.get && method == 'get') {
-		controllerName = controllerFromRoute(route.get);
-		actionName = actionFromRoute(route.get);
+		controllerName = utils.controllerFromRoute(route.get);
+		actionName = utils.actionFromRoute(route.get);
 	} else if(route.post && method == 'post') {
-		controllerName = controllerFromRoute(route.post);
-		actionName = actionFromRoute(route.post);
+		controllerName = utils.controllerFromRoute(route.post);
+		actionName = utils.actionFromRoute(route.post);
 	} else if(route.put && method == 'put') {
-		controllerName = controllerFromRoute(route.put);
-		actionName = actionFromRoute(route.put);
+		controllerName = utils.controllerFromRoute(route.put);
+		actionName = utils.actionFromRoute(route.put);
 
 	} else if(route.delete && method == 'delete') {
-		controllerName = controllerFromRoute(route.delete);
-		actionName = actionFromRoute(route.delete);		
+		controllerName = utils.controllerFromRoute(route.delete);
+		actionName = utils.actionFromRoute(route.delete);		
 	} else {
-		return noRouteMatch(method,url);
+		return exceptions.noRouteMatch(method,url);
 	}
 
 	log.info('Found route ' + route);
-	return dispatcher.runAndRender(controllerName,actionName,url,params,token);
+	return dispatcher.runAndRender(controllerName,actionName,url,params,req,res,route_helpers);
 }

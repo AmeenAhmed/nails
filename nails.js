@@ -83,6 +83,7 @@ if(process.argv.length == 4) {
 
 if(!fs.existsSync(process.cwd() + '/nmake.js')) {
 	console.log('Not in a nails application folder');
+	process.exit(0);
 }
 	if(process.argv[2] == 'server' || process.argv[2] == 's') {
 		var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
