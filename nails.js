@@ -5,6 +5,7 @@
 
 var fs = require('fs');
 var log = require('./log');
+var sqlite = require('sqlite3');
 
 
 if(process.argv.length == 4) {
@@ -118,6 +119,7 @@ if(process.argv[2] == 'db:create') {
 	var environment_file = require(process.cwd() + '/config/environment.js');
 	var dbname = environment_file.environment;
 	console.log("Creating a database in " + dbname + ' environment');
+	var db = new sqlite.Database(process.cwd() + '/db/' + dbname + '.sqlite',sqlite.OPEN_CREATE,function(){});
 }
 
 if(process.argv[2] == 'env') {
