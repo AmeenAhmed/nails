@@ -5,8 +5,7 @@
 
 var fs = require('fs');
 var log = require('./log');
-var sqlite = require('sqlite3');
-
+var dbase = require('./scripts/dbase.js');
 
 if(process.argv.length == 4) {
 	if(process.argv[2] == 'new') {
@@ -98,7 +97,7 @@ if(!fs.existsSync(process.cwd() + '/nmake.js')) {
 
 
 if(process.argv[2] == 'generate' && fs.existsSync(process.cwd() + '/nmake.js')) {
-	if(process.argv[3]) {
+	if(process.argv[3] == 'controller') {
 		console.log('U asked me to generate this [' + process.argv[3] + ']');
 		if(process.argv[4]) {
 			console.log('Creating the '+process.argv[4]+' controller')
@@ -112,6 +111,22 @@ if(process.argv[2] == 'generate' && fs.existsSync(process.cwd() + '/nmake.js')) 
 		} else {
 			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');
 		}
+	} else if(process.argv[3] == 'model') {
+		if(process.argv[4]) {
+			if(process.argv.length >= 6) {
+				params = [];
+				var len = process.argv.length - 5;
+				for(var i=0;i<len;i++) {
+					params.push(process.argv[5+i]);
+				}
+				console.log(params);
+				dbase.createModel(process.argv[4],params);
+			} else {
+				console.log('Generating a model needs attributes');
+			}
+		} else {
+			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');	
+		}
 	}
 }
 
@@ -119,8 +134,10 @@ if(process.argv[2] == 'db:create') {
 	var environment_file = require(process.cwd() + '/config/environment.js');
 	var dbname = environment_file.environment;
 	console.log("Creating a database in " + dbname + ' environment');
-	var db = new sqlite.Database(process.cwd() + '/db/' + dbname + '.sqlite',sqlite.OPEN_CREATE,function(){});
+	dbase.create(dbname);
 }
+
+
 
 if(process.argv[2] == 'env') {
 	var environment_file = require(process.cwd() + '/config/environment.js');

@@ -43,7 +43,7 @@ exports.start_server = function() {
 			console.log('path : '+reqUrl.pathname);
 			console.log('query : '+reqUrl.query);
 			var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res);
-			console.log('response split ===================================>' + response.split(' ')[0]);
+			console.log('Response == ' + response);
 			if(response.split(' ')[0] == '302') {
 				res.statusCode = 302;
 				res.setHeader("Location", response.split(' ')[1]);
