@@ -45,4 +45,6 @@ exports.createModel = function(modelName,params) {
 	var timestamp = generateTimestamp();
  	console.log('Creating the migration ' + process.cwd() + '/db/migrate/' + timestamp + '_' + modelName + '.js');
 
+ 	
+
 }
