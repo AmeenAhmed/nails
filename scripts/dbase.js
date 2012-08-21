@@ -44,7 +44,28 @@ exports.createModel = function(modelName,params) {
 	fs.writeFileSync(process.cwd() + '/db/' + modelName+'_schema.js',str,'utf-8');
 	var timestamp = generateTimestamp();
  	console.log('Creating the migration ' + process.cwd() + '/db/migrate/' + timestamp + '_' + modelName + '.js');
+ 	paramsObject = '{';
+ 	for(var x in params) {
+ 		var obj = params[x].split(':');
+ 		if(x!=0) {
+ 			paramsObject += ','
+ 		}
+ 		paramsObject += '\n\t\t\'' + obj[0] + '\' : \'' + obj[1] + '\'';
+ 	}
+ 	paramsObject += '\n\t}';
+ 	fs.writeFileSync(process.cwd() + '/db/migrate/' + timestamp + '_Create' + modelName + '.js',
+ 		'exports.migrate = {\n\n\nup : function() {\n\tthis.createTable(\''+modelName+'\','+paramsObject+');\n\n},\n\n' +
+ 		'down : function() {\n\n\tthis.dropTable(\'' + modelName + '\');\n\n}\n\n}','utf-8');
 
- 	
-
-}
+ 	var tables = require(process.cwd() + '/db/tables.js').tables;
+ 	tables.push(modelName);
+ 	var tblStr = 'exports.tables = [';
+ 	for(var x in tables) {
+ 		if(x != 0) {
+ 			tblStr += ','
+ 		}
+ 		tblStr += '\n\t\'' + tables[x] + '\''; 
+ 	}
+ 	tblStr += '\n]'
+ 	fs.writeFileSync(process.cwd() + '/db/tables.js',tblStr,'utf-8');	
+ }

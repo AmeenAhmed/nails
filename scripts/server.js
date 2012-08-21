@@ -1,7 +1,4 @@
 
-
-
-
 exports.start_server = function() {
 	var http = require('http');
 	var url = require('url');
