@@ -6,7 +6,8 @@
 var fs = require('fs');
 var log = require('./log');
 var dbase = require('./scripts/dbase.js');
-
+var util = require('util');
+var repl = require('repl');
 if(process.argv.length == 4) {
 	if(process.argv[2] == 'new') {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3]);
@@ -137,6 +138,75 @@ if(process.argv[2] == 'db:create') {
 	dbase.create(dbname);
 }
 
+if(process.argv[2] == 'db:migrate') {
+	console.log('migrating...');
+	var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
+	console.log('Found these migrations..');
+	console.log(migrations);
+	timestamps = [];
+	currentTimestamp = 0;
+	for (var file in migrations) {
+		var timestamp = migrations[file].split('_')[0];
+		var label = migrations[file].split('_')[1];
+		console.log('Label [' + label + '] with timestamp ' + timestamp);
+		timestamps.push(parseInt(timestamp));
+	}
+	sort_function = function(a,b) {
+		if(a < b) return -1;
+		else return 1;
+	}
+	timestamps.sort(sort_function);	
+	
+	if(timestamps.length == 0) {
+		console.log('No migrations found!');
+		return;
+	}
+
+	dbase.getCurrentMigrationTimestamp(function(rows) {
+		console.log('The current timestamp is ' + rows[0]['current_timestamp']);
+		var current_timestamp = rows[0]['current_timestamp'];
+		
+		//var current_timestamp = 9999999999999999;
+		var new_timestamps = [];
+		for(var t in timestamps) {
+			
+			if(timestamps[t] > current_timestamp) {
+				new_timestamps.push(timestamps[t]);
+			} 
+		}
+
+		if(new_timestamps.length == 0) {
+			console.log('Migrations upto date');
+			return;
+		}
+		console.log(new_timestamps);
+
+		new_timestamps.sort(sort_function);
+		console.log('the new current migration is ' + new_timestamps[new_timestamps.length-1]);
+
+		for(var t in new_timestamps) {
+			for(var m in migrations) {
+				if(migrations[m].match(new_timestamps[t])) {
+					console.log('running migration ' + migrations[m]);
+					var migration = require(process.cwd() + '/db/migrate/' + migrations[m]).migrate;
+					migration.createTable = function(tableName,fields) {
+
+						console.log('Table : ' + tableName);
+						console.log('Fields : ' + util.inspect(fields));
+						dbase.createTable(tableName,fields);
+
+					}
+					migration.up();
+					
+				}	
+			}
+			
+		}
+		var latest_timestamp = new_timestamps[new_timestamps.length-1];
+		dbase.setCurrentMigrationTimestamp(latest_timestamp);
+	});
+	
+}
 
 
 if(process.argv[2] == 'env') {
@@ -181,8 +251,31 @@ if(process.argv[2] == 'env') {
 }
 
 if(process.argv[2] == 'check') {
-	var routes = require(process.env['NAILS_PATH'] + '/resources/config/routes.js');
-	var methods = routes.routes['/photos'].via.split('|');
-	
-	console.log(methods);
+	dbase.getCurrentMigrationTimestamp(function(rows) {
+		console.log(rows);
+	});
+
+	dbase.getRowsFromTable('user',function(rows) {
+		console.log(rows);
+	});
+}
+
+if(process.argv[2] == 'console') {
+	user = {
+		new : function(n,r) {
+			console.log('A new user object');
+			return {
+				name : n,
+				role : r,
+				save : function(){
+					console.log('Object is being saved');
+				}
+			}
+		},
+
+	}
+	repl.start({
+		prompt:'nails>',
+		useGlobal:true
+	});
 }

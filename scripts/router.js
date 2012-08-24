@@ -80,7 +80,11 @@ exports.route = function(url,method,query,req,res) {
 			console.log('Route match : ' + route_file.routes.root);
 			route = route_file.routes.root;
 		} else {
-			return fs.readFileSync(process.cwd() + '/public/index.html','utf-8');
+			if(fs.existsSync(process.cwd() + '/public/index.html','utf-8')) {
+				return fs.readFileSync(process.cwd() + '/public/index.html','utf-8');
+			} else {
+				return exceptions.noRouteMatch(method,url);
+			}
 		}
 		
 		return routeRequest(route,url,method,params,req,res,route_helpers);

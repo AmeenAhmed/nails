@@ -4,6 +4,7 @@ var helpers = require('./helpers');
 var vm = require('vm');
 var exceptions = require('./exceptions');
 var utils = require('./utils');
+var dbase = require('./dbase');
 
 exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
@@ -25,7 +26,10 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	
 	for(var key in route_helpers) {
 		context[key] = route_helpers[key];
-	}	
+	}
+
+	initModels();
+	//for(var key in )
 
 
 	//controller[controllerName].redirect_to = helpers.redirect_to;
@@ -87,4 +91,47 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	} else {
 		return exceptions.templateMissing(utils.removeLeadingSlash(url));
 	}
+}
+
+
+function initModels() {
+	console.log('===========================================================================');
+	console.log('			Init Models function');
+	console.log('===========================================================================');
+	var models = {
+
+	}
+	mods = [];
+	var modelsArray = fs.readdirSync(process.cwd() + '/app/models');
+	var modelSchemas = {};
+	console.log(modelsArray);
+
+	for(var m in modelsArray) {
+		var modelName = modelsArray[m].split('.')[0];
+		mods.push(modelName);
+		modelSchemas[modelName] = require(process.cwd() + '/db/' + modelName + '_schema.js').schema;
+	}
+
+	console.log(modelSchemas);
+
+
+
+	function modelInstance(tableName,props) {
+		
+
+		this.save = function() {
+			return dbase.saveRecord(this.tableName);
+		}
+	}
+
+	function modelClass() {
+		
+		this.new = function() {
+
+		}
+	}
+
+	console.log('===========================================================================');
+	console.log('===========================================================================');
+	
 }
