@@ -20,7 +20,16 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	var context = {
 
 	}
-	context.data = {};
+	context.data = { 
+		set : function(x) {
+			this[x] = x;
+		}
+	};
+	context.log = {
+		print : function(x) {
+			console.log(x);
+		}
+	}
 	context.params = params;
 	context.redirect_to = helpers.redirect_to;
 	
@@ -28,9 +37,12 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 		context[key] = route_helpers[key];
 	}
 
-	initModels();
-	//for(var key in )
+	var modelClasses = initModels();
+	for(var key in modelClasses) {
+		context[key] = modelClasses[key];
+	}
 
+	console.log(context);
 
 	//controller[controllerName].redirect_to = helpers.redirect_to;
 
@@ -46,6 +58,8 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 				response.end();
 			}
 		}
+		console.log("After Action ------------------------------------------------------------------------------")
+		console.log(context);		
 	} else {
 		return exceptions.unknownAction(actionName,controllerName);
 	}
@@ -104,6 +118,9 @@ function initModels() {
 	mods = [];
 	var modelsArray = fs.readdirSync(process.cwd() + '/app/models');
 	var modelSchemas = {};
+	var modelClasses = {};
+	var modelInstances = {};
+
 	console.log(modelsArray);
 
 	for(var m in modelsArray) {
@@ -113,25 +130,135 @@ function initModels() {
 	}
 
 	console.log(modelSchemas);
+	console.log(mods);
 
+	
+	function modelInstance(tableName,props,obj) {
+		this.table_name = tableName;
+		this.id = undefined;
+		for(var p in props) {
+			this[p] = undefined;
+		}
 
-
-	function modelInstance(tableName,props) {
-		
-
+		if(obj) {
+			for(var o in obj) {
+				this[o] = obj[o];
+			}
+		}
 		this.save = function() {
-			return dbase.saveRecord(this.tableName);
+			return dbase.saveRecord(this.table_name,this);
+		}
+		this.clone = function() {
+			return this;
+		}
+		this.delete = function() {
+			return dbase.deleteRecord(this.table_name,this);
+		}
+		this.update = function() {
+			return dbase.updateRecord(this.table_name,this);
+		}
+		this.toJSON = function() {
+
+			var schema = require(process.cwd() + '/db/' + this.table_name + '_schema.js').schema;
+
+			var obj = {};
+
+			for(var attr in schema) {
+				obj[attr] = this[attr];
+			}
+			console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+			console.log(obj);
+			console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+			return JSON.stringify(obj);
 		}
 	}
 
-	function modelClass() {
+	function modelClass(tableName,props) {
+
+		this.table_name = tableName;
+		this.properties = props;
+
 		
-		this.new = function() {
+		function rowToModelInstance(tableName,row) {
+			var obj = new modelInstance(tableName,this.properties,row);
+			
+			return obj;
+		}
 
+		function rowsToModelInstances(tableName,rows) {
+			var objs = [];
+			for(var row in rows) {
+				var obj = rowToModelInstance(tableName,rows[row]);
+				objs.push(obj);
+			}
+			return objs;
+		}
+
+
+		this.new = function() {
+			return new modelInstance(this.table_name,this.properties);
+		}
+
+		this.create = function(obj) {
+			var m = new modelInstance(this.table_name,this.properties,obj);
+			m.save();
+			return m;
+		}
+
+		this.all = function(cb) {
+			dbase.all(this.table_name,function(rows,tableName) {
+				cb(rowsToModelInstances(rows,tableName));
+			});
+			
+		}
+
+		this.where = function(obj,cb) {
+			dbase.where(this.table_name,obj,function(rows,tableName) {
+				cb(rowsToModelInstances(rows,tableName));	
+			});
+			
+		}
+
+		this.delete = function(id) {
+			dbase.deleteRowsWithId(this.table_name,id);
+		}
+		this.delete_all = function() {
+			dbase.deleteAll(this.table_name);
+		}
+		this.find = function(id,cb) {
+			dbase.findRowsWithId(this.table_name,id,function(rows,tableName) {
+
+				cb(rowToModelInstance(tableName,rows[0]));
+			});
+			
+		}
+		
+		//this.find_by_sql = function(sql) {
+		//	var rows = dbase.findRowsBySql(this.table_name,sql);
+		//	return rowToModelInstances(rows);
+		//}
+
+		this.first = function(cb) {
+			dbase.findFirstRow(this.table_name,function(row,tableName) {
+				cb(rowToModelInstance(tableName,row));
+			});
+		}
+		this.last = function(cb) {
+			dbase.findLastRow(this.table_name,function(row,tableName) {
+
+				cb(rowToModelInstance(tableName,row));
+			});
 		}
 	}
 
+		for(var m in mods) {
+			modelClasses[mods[m]] = new modelClass(mods[m],modelSchemas[mods[m]]);
+		}
+		console.log(modelClasses);
+
 	console.log('===========================================================================');
 	console.log('===========================================================================');
+
+	return modelClasses;
 	
 }

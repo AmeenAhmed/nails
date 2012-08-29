@@ -34,7 +34,7 @@ exports.getCurrentMigrationTimestamp = function(cb) {
 exports.getRowsFromTable = function(tableName,cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
-	db.all('SELECT * FROM sqlite_master;',function(err,rows) {
+	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
 		console.log(err);
 		console.log(rows);
 		cb(rows);
@@ -119,7 +119,7 @@ exports.createTable = function(tableName,tableFields) {
 	//TODO : create a function for retrieving the current env and place it as name (its hardcoded now)
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
-	var fields = 'id INT PRIMARY KEY ASC';
+	var fields = 'id INTEGER PRIMARY KEY ASC AUTOINCREMENT';
 	for(var f in tableFields) {
 		fields += ', ' + f + ' ';
 		if(tableFields[f] == 'string') {
@@ -138,4 +138,135 @@ exports.createTable = function(tableName,tableFields) {
 	 	console.log(err);
 	 
 	 });
+	 db.close();
+}
+function runQuery(sql) {
+	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
+	db.run(sql, function(err) {
+	 	console.log("Error :" + err);
+	});
+	db.close();	
+}
+function runQueryGetAll(tableName,cb,point) {
+
+	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
+	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
+		console.log(err);
+		console.log(rows);
+		if(point) {
+			if(point == 'first') {
+				cb(rows[0],tableName);
+			} else if(point == 'last') {
+				cb(rows[rows.length-1],tableName);
+
+			}
+		} else {
+			cb(rows,tableName);	
+		}
+		
+	});
+	db.close();
+}
+
+
+function runQueryGetWhere(tableName,obj,cb) {
+	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
+
+	var where = ' WHERE';
+	var i=0;
+	for(var o in obj) {
+		var x='';
+		var and='';
+		if(i>0) and ='AND '
+		if(typeof obj[o] == 'string') x = '\'';
+		where += ' ' + and + o +' = ' + x + obj[o] + x;
+		i++;
+	}
+
+	
+	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
+		console.log(err);
+	 	console.log(rows);
+	 	cb(rows,tableName);
+	});
+	db.close();
+}
+
+function getDbName() {
+	//TODO : Hardcoded to development now. Implement method to find the current environment
+	return "development";
+}
+
+exports.saveRecord = function(tableName,model) {
+	console.log('Saving Record ************************************************************************************')
+
+	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	console.log(schema);
+	
+	var vals = '';
+	var attribs = '';
+	var i = 0 ;
+
+	for(var prop in schema) {
+		var t = '';
+		if(i > 0) {
+			vals += ',';
+			attribs += ',';	
+		} 
+		if(schema[prop] == 'string') t='\'';
+		attribs += prop;
+		vals += t + model[prop] + t;
+		i++;
+	}
+	runQuery('INSERT INTO ' + tableName + '('+ attribs +')' + ' VALUES (' + vals + ');');
+	console.log('Saved Record ************************************************************************************')
+}
+
+exports.all = function(tableName,cb) {
+	
+	runQueryGetAll(tableName,cb);
+}
+exports.where = function(tableName,obj,cb) {
+	runQueryGetWhere(tableName,obj,cb);
+}
+exports.deleteRowsWithId = function(tableName,id) {
+	runQuery('DELETE FROM ' + tableName + ' WHERE id = ' + id + ';');
+}
+exports.deleteAll = function(tableName) {
+	runQuery('DELETE FROM ' + tableName);
+}
+exports.findRowsWithId = function(tableName,id,cb) {
+	var obj = {};
+	obj['id'] = id;
+	runQueryGetWhere(tableName,obj,cb);
+}
+exports.findFirstRow = function(tableName,cb) {
+	runQueryGetAll(tableName,cb,'first');
+}
+exports.findLastRow = function(tableName,cb) {
+	runQueryGetAll(tableName,cb,'last');
+}
+exports.deleteRecord = function(tableName,model) {
+	exports.deleteRowsWithId(tableName,model.id);
+}
+exports.updateRecord = function(tableName,model) {
+
+	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	console.log(schema);
+	
+	var query = ' ';
+	var i = 0 ;
+
+	for(var prop in schema) {
+		var t = '';
+		if(i > 0) {
+			query += ','
+		} 
+		if(schema[prop] == 'string') t='\'';
+		
+		
+		query += prop + ' = ' + t + model[prop] + t;
+		i++;
+	}
+	runQuery('UPDATE ' + tableName + ' SET ' + query + ';');
 }

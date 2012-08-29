@@ -251,11 +251,8 @@ if(process.argv[2] == 'env') {
 }
 
 if(process.argv[2] == 'check') {
-	dbase.getCurrentMigrationTimestamp(function(rows) {
-		console.log(rows);
-	});
-
-	dbase.getRowsFromTable('user',function(rows) {
+	//dbase.setCurrentMigrationTimestamp(0);
+	dbase.getRowsFromTable('User',function(rows) {
 		console.log(rows);
 	});
 }

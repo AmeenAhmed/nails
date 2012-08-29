@@ -2,6 +2,6 @@ TODO :
 
 1. The url with parameter functionality is buggy, have to correct that.
 2. Implement named routes (done)
-3. helpers
-4. orm for models
+3. helpers (doing)
+4. orm for models (done)
 5. Add functionality to the generator
