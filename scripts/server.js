@@ -11,7 +11,7 @@ exports.start_server = function() {
 		// delete require.cache[routesMod];
 		require('module')._cache={};
 		//delete require.cache[key];
-
+		global.callbackCount = 0;
 		var token = '';
 
 		for(var i=0;i<32;i++) {
@@ -40,14 +40,14 @@ exports.start_server = function() {
 			console.log('path : '+reqUrl.pathname);
 			console.log('query : '+reqUrl.query);
 			var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res);
-			console.log('Response == ' + response);
-			if(response.split(' ')[0] == '302') {
-				res.statusCode = 302;
-				res.setHeader("Location", response.split(' ')[1]);
-				res.end();
-			} else {			
-				res.end(response);
-			}
+			// console.log('Response == ' + response);
+			// if(response.split(' ')[0] == '302') {
+			// 	res.statusCode = 302;
+			// 	res.setHeader("Location", response.split(' ')[1]);
+			// 	res.end();
+			// } else {			
+			// 	res.end(response);
+			// }
 		} else if(req.method == 'POST' || req.method == 'PUT') {
 			var postData = '';
 			req.on('data',function(chunk) {

@@ -5,6 +5,7 @@ var vm = require('vm');
 var exceptions = require('./exceptions');
 var utils = require('./utils');
 var dbase = require('./dbase');
+var util = require('util');
 
 exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
@@ -21,15 +22,18 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 
 	}
 	context.data = { 
-		set : function(x) {
-			this[x] = x;
+		set : function(key,val) {
+			this[key] = val;
 		}
 	};
+
 	context.log = {
 		print : function(x) {
 			console.log(x);
 		}
 	}
+	
+	context.util = require('util');
 	context.params = params;
 	context.redirect_to = helpers.redirect_to;
 	
@@ -58,52 +62,71 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 				response.end();
 			}
 		}
-		console.log("After Action ------------------------------------------------------------------------------")
-		console.log(context);		
 	} else {
-		return exceptions.unknownAction(actionName,controllerName);
+		response.end(exceptions.unknownAction(actionName,controllerName));
 	}
 	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
 	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
 
 	var viewContext = {};
-	viewContext['data'] = context.data;
-
 	for(var key in route_helpers) {
 		viewContext[key] = route_helpers[key];
-	}	
+	}
+	function waitTillNextTick() {
+		process.nextTick(function(){
+			if(global.callbackCount) {
+				console.log("After Action ------------------------------------------------------------------------------")
+				console.log(global.callbackCount);
+				waitTillNextTick();
 
-	if(fs.existsSync(viewFileName)) {
-		return  html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
-			return ejs.render(fs.readFileSync(viewFileName,'utf-8'), viewContext);
-		}, 
-		scripts: function() {
-			
-			var scriptsHtml = '';
-			var fileList = fs.readdirSync(process.cwd() + '/public/js');
-
-			for(var i=0;i<fileList.length;i++) {
-				scriptsHtml += '<script type="text/javascript" src="/'+fileList[i]+
-							'"></script>\n';
 			}
-			return scriptsHtml;
+			else {
+				
+				viewContext['data'] = context.data;
+				
+				console.log(global.callbackCount);
+				render(response,viewContext);	
+
+			}
+		});
+	}
+	waitTillNextTick();
+	function render(response,viewContext) {
 		
-		},
-		styles: function() {
-			var stylesHtml = '';
-			var fileList = fs.readdirSync(process.cwd() + '/public/css');
+		if(fs.existsSync(viewFileName)) {
+			 html = ejs.render(fs.readFileSync(layoutName,'utf-8'), {yield : function() {
+				return ejs.render(fs.readFileSync(viewFileName,'utf-8'), viewContext);
+			}, 
+			scripts: function() {
+				
+				var scriptsHtml = '';
+				var fileList = fs.readdirSync(process.cwd() + '/public/js');
 
-			for(var i=0;i<fileList.length;i++) {
-				stylesHtml += '<link rel="stylesheet" type="text/css" href="/'+fileList[i]+
-							'" />\n';
+				for(var i=0;i<fileList.length;i++) {
+					scriptsHtml += '<script type="text/javascript" src="/'+fileList[i]+
+								'"></script>\n';
+				}
+				return scriptsHtml;
+			
+			},
+			styles: function() {
+				var stylesHtml = '';
+				var fileList = fs.readdirSync(process.cwd() + '/public/css');
+
+				for(var i=0;i<fileList.length;i++) {
+					stylesHtml += '<link rel="stylesheet" type="text/css" href="/'+fileList[i]+
+								'" />\n';
+				}
+				return stylesHtml;
+
 			}
-			return stylesHtml;
-
+			
+		});
+			//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
+			response.end(html);
+		} else {
+			response.end(exceptions.templateMissing(utils.removeLeadingSlash(url)));
 		}
-	});
-		//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
-	} else {
-		return exceptions.templateMissing(utils.removeLeadingSlash(url));
 	}
 }
 
@@ -227,7 +250,6 @@ function initModels() {
 		}
 		this.find = function(id,cb) {
 			dbase.findRowsWithId(this.table_name,id,function(rows,tableName) {
-
 				cb(rowToModelInstance(tableName,rows[0]));
 			});
 			
@@ -239,14 +261,18 @@ function initModels() {
 		//}
 
 		this.first = function(cb) {
+			global.callbackCount++;
 			dbase.findFirstRow(this.table_name,function(row,tableName) {
 				cb(rowToModelInstance(tableName,row));
+				global.callbackCount--;
 			});
 		}
 		this.last = function(cb) {
+			global.callbackCount++;
 			dbase.findLastRow(this.table_name,function(row,tableName) {
 
 				cb(rowToModelInstance(tableName,row));
+				global.callbackCount--;
 			});
 		}
 	}

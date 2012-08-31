@@ -1,6 +1,7 @@
 var sqlite = require('sqlite3').verbose();
 var fs = require('fs');
 var util = require('util');
+var Sync = require('sync');
 
 exports.create = function(name) {
 	console.log('Creating the file at ' + process.cwd() + '/db/tables.js');
@@ -147,23 +148,24 @@ function runQuery(sql) {
 	});
 	db.close();	
 }
-function runQueryGetAll(tableName,cb,point) {
+function runQueryGetAll(tableName,point,cb) {
 
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
 	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
-		console.log(err);
-		console.log(rows);
-		if(point) {
-			if(point == 'first') {
-				cb(rows[0],tableName);
-			} else if(point == 'last') {
-				cb(rows[rows.length-1],tableName);
+	 	console.log(err);
+	 	console.log(rows);
+	 	if(point) {
+	 		if(point == 'first') {
+	 			cb(rows[0],tableName);
+	 			global.fin = rows[0];
+	 		} else if(point == 'last') {
+	 			cb(rows[rows.length-1],tableName);
 
-			}
-		} else {
-			cb(rows,tableName);	
-		}
-		
+	 		}
+	 	} else {
+	 		cb(rows,tableName);	
+	 	}
+	 	global.fin = rows;
 	});
 	db.close();
 }
@@ -182,12 +184,12 @@ function runQueryGetWhere(tableName,obj,cb) {
 		where += ' ' + and + o +' = ' + x + obj[o] + x;
 		i++;
 	}
-
 	
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
 		console.log(err);
 	 	console.log(rows);
 	 	cb(rows,tableName);
+	 	
 	});
 	db.close();
 }
@@ -241,10 +243,10 @@ exports.findRowsWithId = function(tableName,id,cb) {
 	runQueryGetWhere(tableName,obj,cb);
 }
 exports.findFirstRow = function(tableName,cb) {
-	runQueryGetAll(tableName,cb,'first');
+	runQueryGetAll(tableName,'first',cb);
 }
 exports.findLastRow = function(tableName,cb) {
-	runQueryGetAll(tableName,cb,'last');
+	runQueryGetAll(tableName,'last',cb);
 }
 exports.deleteRecord = function(tableName,model) {
 	exports.deleteRowsWithId(tableName,model.id);

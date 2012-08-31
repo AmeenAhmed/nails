@@ -83,7 +83,7 @@ exports.route = function(url,method,query,req,res) {
 			if(fs.existsSync(process.cwd() + '/public/index.html','utf-8')) {
 				return fs.readFileSync(process.cwd() + '/public/index.html','utf-8');
 			} else {
-				return exceptions.noRouteMatch(method,url);
+				response.end(exceptions.noRouteMatch(method,url));
 			}
 		}
 		
@@ -114,7 +114,7 @@ exports.route = function(url,method,query,req,res) {
 		}
 
 		if(rIndex == null) {
-			return exceptions.noRouteMatch(method,url);
+			response.end(exceptions.noRouteMatch(method,url));
 		} 
 
 		console.log(route_file.routes[rIndex]);
@@ -132,7 +132,7 @@ exports.route = function(url,method,query,req,res) {
 			}
 		}
 
-		return exceptions.noRouteMatch(method,url);
+		response.end(exceptions.noRouteMatch(method,url));
 		console.log('no route ' + url);
 	}	
 		
