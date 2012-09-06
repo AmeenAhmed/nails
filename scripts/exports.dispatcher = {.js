@@ -36,7 +36,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	context.util = require('util');
 	context.params = params;
 	context.redirect_to = helpers.redirect_to;
-		
+	
 	for(var key in route_helpers) {
 		context[key] = route_helpers[key];
 	}
@@ -45,7 +45,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	for(var key in modelClasses) {
 		context[key] = modelClasses[key];
 	}
-	context['$'] = {};
+
 	console.log(context);
 
 	//controller[controllerName].redirect_to = helpers.redirect_to;
@@ -53,10 +53,8 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	if(controller[controllerName][actionName]) {
 		//var res = controller[controllerName][actionName]();
 		var actionFunction = controller[controllerName][actionName].toString().replace('function ()','');
-
-		console.log('ksahdkjasbjldvjhsabjhdbkjabskdbkasbnk')
+		actionFunction = actionFunction.split('@').join('data.');
 		console.log(actionFunction);
-		console.log('ksahdkjasbjldvjhsabjhdbkjabskdbkasbnk')
 		var res = vm.runInNewContext(actionFunction,context);
 		if(res) {
 			if(res.status == 302) {
@@ -94,7 +92,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	// 	});
 	// }
 	// waitTillNextTick();
-	viewContext['$'] = context['$'];
+	viewContext['data'] = context.data;
 	render(response,viewContext);
 	function render(response,viewContext) {
 		

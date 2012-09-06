@@ -243,6 +243,7 @@ exports.findRowsWithId = function(tableName,id,cb) {
 	runQueryGetWhere(tableName,obj,cb);
 }
 exports.findFirstRow = function(tableName,cb) {
+	
 	runQueryGetAll(tableName,'first',cb);
 }
 exports.findLastRow = function(tableName,cb) {

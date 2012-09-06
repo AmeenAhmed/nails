@@ -114,25 +114,25 @@ exports.route = function(url,method,query,req,res) {
 		}
 
 		if(rIndex == null) {
-			response.end(exceptions.noRouteMatch(method,url));
+			res.end(exceptions.noRouteMatch(method,url));
 		} 
 
-		console.log(route_file.routes[rIndex]);
-		var routeSplit = rIndex.split('/');
-		var route = route_file.routes[rIndex];
-		for(var i=0;i<routeSplit.length;i++) {
-			//console.log(routeSplit[i].match(':'));
-			if(routeSplit[i].match(':')) {
-				var param = urlSplit[i+1];
-				var key = routeSplit[i].replace(':','');
-				params[key] = param;
-				console.log(params);
-				//console.log(key + ':' + param);
-				return routeRequest(route,url,method,params,req,res,route_helpers);
-			}
-		}
+		// console.log(route_file.routes[rIndex]);
+		// var routeSplit = rIndex.split('/');
+		// var route = route_file.routes[rIndex];
+		// for(var i=0;i<routeSplit.length;i++) {
+		// 	//console.log(routeSplit[i].match(':'));
+		// 	if(routeSplit[i].match(':')) {
+		// 		var param = urlSplit[i+1];
+		// 		var key = routeSplit[i].replace(':','');
+		// 		params[key] = param;
+		// 		console.log(params);
+		// 		//console.log(key + ':' + param);
+		// 		return routeRequest(route,url,method,params,req,res,route_helpers);
+		// 	}
+		// }
 
-		response.end(exceptions.noRouteMatch(method,url));
+		res.end(exceptions.noRouteMatch(method,url));
 		console.log('no route ' + url);
 	}	
 		

@@ -2,7 +2,9 @@
 exports.start_server = function() {
 	var http = require('http');
 	var url = require('url');
+	var Fiber = require('fibers');
 	http.createServer(function(req,res) {
+		Fiber(function() { 
 		console.log(req.url);
 		//res.end(req.url);
 		 mod = require.resolve(process.env["NAILS_PATH"] + '/scripts/router.js');
@@ -62,5 +64,6 @@ exports.start_server = function() {
 				res.end(response);
 			});
 		}
+	}).run();
 	}).listen(8080,'127.0.0.1');	
 }
