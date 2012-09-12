@@ -26,7 +26,6 @@ exports.getCurrentMigrationTimestamp = function(cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	db.all('SELECT * FROM migration;',function(err,rows) {
-		//console.log(rows);
 		cb(rows);
 	});
 	db.close();
@@ -36,8 +35,6 @@ exports.getRowsFromTable = function(tableName,cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
-		console.log(err);
-		console.log(rows);
 		cb(rows);
 	});
 	db.close();
@@ -152,8 +149,6 @@ function runQueryGetAll(tableName,point,cb) {
 
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
 	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
-	 	console.log(err);
-	 	console.log(rows);
 	 	if(point) {
 	 		if(point == 'first') {
 	 			cb(rows[0],tableName);
@@ -186,8 +181,6 @@ function runQueryGetWhere(tableName,obj,cb) {
 	}
 	
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
-		console.log(err);
-	 	console.log(rows);
 	 	cb(rows,tableName);
 	 	
 	});
@@ -200,11 +193,8 @@ function getDbName() {
 }
 
 exports.saveRecord = function(tableName,model) {
-	console.log('Saving Record ************************************************************************************')
-
 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	console.log(schema);
-	
+
 	var vals = '';
 	var attribs = '';
 	var i = 0 ;
@@ -221,12 +211,11 @@ exports.saveRecord = function(tableName,model) {
 		i++;
 	}
 	runQuery('INSERT INTO ' + tableName + '('+ attribs +')' + ' VALUES (' + vals + ');');
-	console.log('Saved Record ************************************************************************************')
 }
 
 exports.all = function(tableName,cb) {
 	
-	runQueryGetAll(tableName,cb);
+	runQueryGetAll(tableName,null,cb);
 }
 exports.where = function(tableName,obj,cb) {
 	runQueryGetWhere(tableName,obj,cb);
@@ -255,7 +244,6 @@ exports.deleteRecord = function(tableName,model) {
 exports.updateRecord = function(tableName,model) {
 
 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	console.log(schema);
 	
 	var query = ' ';
 	var i = 0 ;
@@ -271,5 +259,7 @@ exports.updateRecord = function(tableName,model) {
 		query += prop + ' = ' + t + model[prop] + t;
 		i++;
 	}
-	runQuery('UPDATE ' + tableName + ' SET ' + query + ';');
+	var where = ' WHERE id=' + model.id; 
+	console.log('UPDATE ' + tableName + ' SET ' + query + ';');
+	runQuery('UPDATE ' + tableName + ' SET ' + query + where + ';');
 }

@@ -9,15 +9,11 @@ var util = require('util');
 
 exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
-		return exceptions.noController(controllerName+'_controller');
+		res.end(exceptions.noController(controllerName+'_controller'));
 	}
 
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
-	/*controller[controllerName][actionName].data = {};
-	controller[controllerName][actionName].params = params
-	controller[controllerName].token = token */
-	// test code to test the possibility of using the vm module to execute the action code.
-	//-------------------------------------------------------------------------------------
+
 	var context = {
 
 	}
@@ -46,17 +42,9 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 		context[key] = modelClasses[key];
 	}
 	context['$'] = {};
-	console.log(context);
-
-	//controller[controllerName].redirect_to = helpers.redirect_to;
 
 	if(controller[controllerName][actionName]) {
-		//var res = controller[controllerName][actionName]();
 		var actionFunction = controller[controllerName][actionName].toString().replace('function ()','');
-
-		console.log('ksahdkjasbjldvjhsabjhdbkjabskdbkasbnk')
-		console.log(actionFunction);
-		console.log('ksahdkjasbjldvjhsabjhdbkjabskdbkasbnk')
 		var res = vm.runInNewContext(actionFunction,context);
 		if(res) {
 			if(res.status == 302) {
@@ -75,25 +63,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	for(var key in route_helpers) {
 		viewContext[key] = route_helpers[key];
 	}
-	// function waitTillNextTick() {
-	// 	process.nextTick(function(){
-	// 		if(global.callbackCount) {
-	// 			console.log("After Action ------------------------------------------------------------------------------")
-	// 			console.log(global.callbackCount);
-	// 			waitTillNextTick();
-
-	// 		}
-	// 		else {
-				
-	// 			viewContext['data'] = context.data;
-				
-	// 			console.log(global.callbackCount);
-	// 			render(response,viewContext);	
-
-	// 		}
-	// 	});
-	// }
-	// waitTillNextTick();
+	
 	viewContext['$'] = context['$'];
 	render(response,viewContext);
 	function render(response,viewContext) {
@@ -127,7 +97,6 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 			}
 			
 		});
-			//return ejs.render(fs.readFileSync(viewFileName,'utf-8'), {data:controller[controllerName].data});
 			response.end(html);
 		} else {
 			response.end(exceptions.templateMissing(utils.removeLeadingSlash(url)));
@@ -137,9 +106,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 
 
 function initModels() {
-	console.log('===========================================================================');
-	console.log('			Init Models function');
-	console.log('===========================================================================');
+
 	var models = {
 
 	}
@@ -149,7 +116,6 @@ function initModels() {
 	var modelClasses = {};
 	var modelInstances = {};
 
-	console.log(modelsArray);
 
 	for(var m in modelsArray) {
 		var modelName = modelsArray[m].split('.')[0];
@@ -157,10 +123,6 @@ function initModels() {
 		modelSchemas[modelName] = require(process.cwd() + '/db/' + modelName + '_schema.js').schema;
 	}
 
-	console.log(modelSchemas);
-	console.log(mods);
-
-	
 	function modelInstance(tableName,props,obj) {
 		this.table_name = tableName;
 		this.id = undefined;
@@ -194,9 +156,6 @@ function initModels() {
 			for(var attr in schema) {
 				obj[attr] = this[attr];
 			}
-			console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-			console.log(obj);
-			console.log('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
 			return JSON.stringify(obj);
 		}
 	}
@@ -234,17 +193,25 @@ function initModels() {
 		}
 
 		this.all = function(cb) {
+			var Fiber = require('fibers');
+			var fiber = Fiber.current;
+			console.log('comes here');
 			dbase.all(this.table_name,function(rows,tableName) {
-				cb(rowsToModelInstances(rows,tableName));
+				fiber.run(rows);
 			});
+			var r = Fiber.yield();
 			
+			return rowsToModelInstances(tableName,r);
 		}
 
 		this.where = function(obj,cb) {
+			var Fiber = require('fibers');
+			var fiber = Fiber.current;
 			dbase.where(this.table_name,obj,function(rows,tableName) {
-				cb(rowsToModelInstances(rows,tableName));	
+				fiber.run(rows);	
 			});
-			
+			var r = Fiber.yield();
+			return rowsToModelInstances(tableName,r);
 		}
 
 		this.delete = function(id) {
@@ -254,25 +221,22 @@ function initModels() {
 			dbase.deleteAll(this.table_name);
 		}
 		this.find = function(id,cb) {
+			var Fiber = require('fibers');
+			var fiber = Fiber.current;
 			dbase.findRowsWithId(this.table_name,id,function(rows,tableName) {
-				cb(rowToModelInstance(tableName,rows[0]));
+				fiber.run(rows)
 			});
-			
+			var r = Fiber.yield();
+			return rowsToModelInstances(tableName,r);
 		}
 		
-		//this.find_by_sql = function(sql) {
-		//	var rows = dbase.findRowsBySql(this.table_name,sql);
-		//	return rowToModelInstances(rows);
-		//}
 
 		this.first = function(cb) {
 			
 			var Fiber = require('fibers');
 			var fiber = Fiber.current;
 			dbase.findFirstRow(this.table_name,function(row,tableName) {
-				//cb(rowToModelInstance(tableName,row));
 				fiber.run(row);
-				
 			});
 			var r = Fiber.yield();
 			return rowToModelInstance(tableName,r);
@@ -281,8 +245,6 @@ function initModels() {
 			var Fiber = require('fibers');
 			var fiber = Fiber.current;
 			dbase.findLastRow(this.table_name,function(row,tableName) {
-				// cb(rowToModelInstance(tableName,row));
-				// global.callbackCount--;
 				fiber.run(row);
 			});
 			var r = Fiber.yield();
@@ -293,11 +255,5 @@ function initModels() {
 		for(var m in mods) {
 			modelClasses[mods[m]] = new modelClass(mods[m],modelSchemas[mods[m]]);
 		}
-		console.log(modelClasses);
-
-	console.log('===========================================================================');
-	console.log('===========================================================================');
-
 	return modelClasses;
-	
 }

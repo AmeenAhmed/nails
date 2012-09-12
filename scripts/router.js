@@ -9,12 +9,12 @@ var utils = require('./utils');
 
 function initialize(routes) {
 	var named_routes = {};
-	console.log(routes);
+	
 	for(var key in routes) {
 		
 		if(routes[key].match == 'resource') {
 			
-			console.log('resource found : ' + key);
+			
 			routes[key] = {get:key+'#index', post:key+'#create'};
 			routes[key+'/new'] = {get:key+'#new'};
 			routes[key+'/:id'] = {get:key+'#show', put:key+'#update', delete:key+'#destroy'};
@@ -26,7 +26,7 @@ function initialize(routes) {
 				
 			
 		} else if(routes[key]['as']) {
-			console.log('We have an as : ' + routes[key].as);
+			
 			var route = key;
 			var helper_method = routes[key].as;
 			named_routes[helper_method + '_path'] = utils.createRouteHelper('/' + route);
@@ -41,9 +41,7 @@ function initialize(routes) {
 			named_routes[helper_method] = utils.createRouteHelper('/' + key);
 		}
 	}
-	console.log('****************************************');
-	console.log(named_routes);
-	console.log('****************************************');
+	
 	return named_routes;
 }
 
@@ -59,31 +57,32 @@ exports.route = function(url,method,query,req,res) {
 	}
 
 	if(url.match('.js')) {
-		console.log(url + ' js called!');
 		if(fs.existsSync(process.cwd() + '/public/js' + url)) {
-			return fs.readFileSync(process.cwd() + '/public/js' + url,'utf-8');
+			res.setHeader('Content-Type','text/javascript');
+			res.end(fs.readFileSync(process.cwd() + '/public/js' + url,'utf-8'));
 		} else {
-			return '404';
+			res.statusCode = 404;
+			res.end();
 		}
 	}
 	if(url.match('.css')) {
 		if(fs.existsSync(process.cwd() + '/public/css' + url)) {
-			return fs.readFileSync(process.cwd() + '/public/css' + url,'utf-8');
+			res.setHeader('Content-Type','text/css');
+			res.end(fs.readFileSync(process.cwd() + '/public/css' + url,'utf-8'));
 		} else {
-			return '404';
+			res.statusCode = 404;
+			res.end();
 		}	
 	}
 	if(url == '/') {
 		var route = '';
-		console.log(route_file);
 		if(route_file.routes.root) {
-			console.log('Route match : ' + route_file.routes.root);
 			route = route_file.routes.root;
 		} else {
 			if(fs.existsSync(process.cwd() + '/public/index.html','utf-8')) {
-				return fs.readFileSync(process.cwd() + '/public/index.html','utf-8');
+				res.end(fs.readFileSync(process.cwd() + '/public/index.html','utf-8'));
 			} else {
-				response.end(exceptions.noRouteMatch(method,url));
+				res.end(exceptions.noRouteMatch(method,url));
 			}
 		}
 		
@@ -93,47 +92,44 @@ exports.route = function(url,method,query,req,res) {
 		var route = route_file.routes[utils.removeLeadingSlash(url)];
 		return routeRequest(route,url,method,params,req,res,route_helpers);
 	} else {
+		url = utils.removeLeadingSlash(url);
+		var c1 = url.split('/').length;
+		var done = false;
+		var routes = route_file.routes;
 		var urlSplit = url.split('/');
-		var rIndex = null;
-		console.log(urlSplit);
-		for(var r in route_file.routes) {
-
-			if(urlSplit.length-1 != r.split("/").length) {
-				continue;
-			}
-			console.log('Hurray got here : urlSplit : '+urlSplit);
-			if(r.split('/')[1]) {
-				console.log('r.split(\'/\')[1].match(\':\')  : '+r.split('/')[1].match(':'));
-			}
-			if(urlSplit[1].length > 0 && r.match(urlSplit[1]+'/') && r.split('/')[1].match(':')	) {
-				//console.log('match!')
-				rIndex = r; 
-				console.log('Found with id');
-				break;
+		
+		for(var route in routes) {
+			var c2 = route.split('/').length;
+			var routeSplit = route.split('/');
+			var routeVal = undefined;
+			if(c1 == c2) {
+				var bool = true;
+				
+				for(var x in urlSplit) {
+					if(urlSplit[x] != routeSplit[x] && !routeSplit[x].match(':')) {
+						bool = false;
+						
+						break;
+					}
+				}
+				
+				if(bool) {
+					routeVal = routes[route];
+					for(x in routeSplit) {
+						if(routeSplit[x].match(':')) {
+							var key = routeSplit[x].replace(':','');
+							var value = urlSplit[x];
+							params[key] = value;
+						}
+					}
+					console.log(params);
+					return routeRequest(routeVal,url,method,params,req,res,route_helpers);
+					break;
+				}
 			}
 		}
-
-		if(rIndex == null) {
-			res.end(exceptions.noRouteMatch(method,url));
-		} 
-
-		// console.log(route_file.routes[rIndex]);
-		// var routeSplit = rIndex.split('/');
-		// var route = route_file.routes[rIndex];
-		// for(var i=0;i<routeSplit.length;i++) {
-		// 	//console.log(routeSplit[i].match(':'));
-		// 	if(routeSplit[i].match(':')) {
-		// 		var param = urlSplit[i+1];
-		// 		var key = routeSplit[i].replace(':','');
-		// 		params[key] = param;
-		// 		console.log(params);
-		// 		//console.log(key + ':' + param);
-		// 		return routeRequest(route,url,method,params,req,res,route_helpers);
-		// 	}
-		// }
-
+		
 		res.end(exceptions.noRouteMatch(method,url));
-		console.log('no route ' + url);
 	}	
 		
 }
@@ -146,13 +142,11 @@ function routeRequest(route,url,method,params,req,res,route_helpers) {
 	var controllerName = '';
 	var actionName = '';
 	if(route.match) { 
-		console.log('Method match is found');
 		if(route.via && route.via.indexOf(method) == -1) {
 			return exceptions.noRouteMatch(method,url);
 		} 
 		controllerName = utils.controllerFromRoute(route.match);
 		actionName = utils.actionFromRoute(route.match);
-		console.log(controllerName+'@'+actionName);
 	} else if(route.get && method == 'get') {
 		controllerName = utils.controllerFromRoute(route.get);
 		actionName = utils.actionFromRoute(route.get);
@@ -169,7 +163,5 @@ function routeRequest(route,url,method,params,req,res,route_helpers) {
 	} else {
 		return exceptions.noRouteMatch(method,url);
 	}
-
-	log.info('Found route ' + route);
 	return dispatcher.runAndRender(controllerName,actionName,url,params,req,res,route_helpers);
 }
