@@ -7,7 +7,7 @@ TODO :
 5. Add functionality to the generator
 6. Pluggable view engines
 7. Plugins for other dbs than sqlite
-8. Synchronize all the db calls
+8. Synchronize all the db calls (done)
 
 
 
@@ -19,3 +19,5 @@ TODO :
 5. plugins for other dbs 
 6. View helpers
 7. Add more functionality to the migrations
+8. Add scaffolding
+9. Implement a bundler

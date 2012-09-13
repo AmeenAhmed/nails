@@ -196,6 +196,10 @@ if(process.argv[2] == 'db:migrate') {
 						dbase.createTable(tableName,fields);
 
 					}
+					migration.dropTable = function(tableName) {
+						console.log('Dropping table ' + tableName);
+						dbas
+					}
 					migration.up();
 					
 				}	

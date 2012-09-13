@@ -1,7 +1,7 @@
 var sqlite = require('sqlite3').verbose();
 var fs = require('fs');
 var util = require('util');
-var Sync = require('sync');
+var Fiber = require('fibers');
 
 exports.create = function(name) {
 	console.log('Creating the file at ' + process.cwd() + '/db/tables.js');
@@ -140,29 +140,40 @@ exports.createTable = function(tableName,tableFields) {
 }
 function runQuery(sql) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
+	var fiber = Fiber.current;
 	db.run(sql, function(err) {
-	 	console.log("Error :" + err);
+	 	
+	 	fiber.run(err);
 	});
+	var r = Fiber.yield();
 	db.close();	
+	return r;
 }
 function runQueryGetAll(tableName,point,cb) {
 
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
+	
+	var fiber = Fiber.current;
 	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
 	 	if(point) {
 	 		if(point == 'first') {
-	 			cb(rows[0],tableName);
-	 			global.fin = rows[0];
+	 			//cb(rows[0],tableName);
+	 			fiber.run(rows[0])
+	 			
 	 		} else if(point == 'last') {
-	 			cb(rows[rows.length-1],tableName);
+	 			//cb(rows[rows.length-1],tableName);
+	 			fiber.run(rows[rows.length-1]);
 
 	 		}
 	 	} else {
-	 		cb(rows,tableName);	
+	 		//cb(rows,tableName);
+	 		fiber.run(rows);	
 	 	}
-	 	global.fin = rows;
+	 	
 	});
+	var r = Fiber.yield();
 	db.close();
+	return r;
 }
 
 
@@ -179,12 +190,15 @@ function runQueryGetWhere(tableName,obj,cb) {
 		where += ' ' + and + o +' = ' + x + obj[o] + x;
 		i++;
 	}
-	
+	var fiber = Fiber.current;
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
-	 	cb(rows,tableName);
+	 	//cb(rows,tableName);
+	 	fiber.run(rows);
 	 	
 	});
+	var r = Fiber.yield();
 	db.close();
+	return r;
 }
 
 function getDbName() {
@@ -213,12 +227,12 @@ exports.saveRecord = function(tableName,model) {
 	runQuery('INSERT INTO ' + tableName + '('+ attribs +')' + ' VALUES (' + vals + ');');
 }
 
-exports.all = function(tableName,cb) {
+exports.all = function(tableName) {
 	
-	runQueryGetAll(tableName,null,cb);
+	return runQueryGetAll(tableName,null);
 }
-exports.where = function(tableName,obj,cb) {
-	runQueryGetWhere(tableName,obj,cb);
+exports.where = function(tableName,obj) {
+	return runQueryGetWhere(tableName,obj);
 }
 exports.deleteRowsWithId = function(tableName,id) {
 	runQuery('DELETE FROM ' + tableName + ' WHERE id = ' + id + ';');
@@ -229,14 +243,14 @@ exports.deleteAll = function(tableName) {
 exports.findRowsWithId = function(tableName,id,cb) {
 	var obj = {};
 	obj['id'] = id;
-	runQueryGetWhere(tableName,obj,cb);
+	return runQueryGetWhere(tableName,obj);
 }
-exports.findFirstRow = function(tableName,cb) {
+exports.findFirstRow = function(tableName) {
 	
-	runQueryGetAll(tableName,'first',cb);
+	return runQueryGetAll(tableName,'first');
 }
-exports.findLastRow = function(tableName,cb) {
-	runQueryGetAll(tableName,'last',cb);
+exports.findLastRow = function(tableName) {
+	return runQueryGetAll(tableName,'last');
 }
 exports.deleteRecord = function(tableName,model) {
 	exports.deleteRowsWithId(tableName,model.id);
@@ -260,6 +274,6 @@ exports.updateRecord = function(tableName,model) {
 		i++;
 	}
 	var where = ' WHERE id=' + model.id; 
-	console.log('UPDATE ' + tableName + ' SET ' + query + ';');
+
 	runQuery('UPDATE ' + tableName + ' SET ' + query + where + ';');
 }

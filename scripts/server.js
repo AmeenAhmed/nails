@@ -5,11 +5,11 @@ exports.start_server = function() {
 	var Fiber = require('fibers');
 	http.createServer(function(req,res) {
 		Fiber(function() { 
-			//process.on('uncaughtException', function(err) {
-			//	console.log(err.message);
-			//	
-			//	res.end(err.stack);
-			//});
+			process.on('uncaughtException', function(err) {
+				console.log(err.message);
+				
+				res.end(err.stack);
+			});
 			require('module')._cache={};
 			
 			global.callbackCount = 0;

@@ -193,24 +193,15 @@ function initModels() {
 		}
 
 		this.all = function(cb) {
-			var Fiber = require('fibers');
-			var fiber = Fiber.current;
-			console.log('comes here');
-			dbase.all(this.table_name,function(rows,tableName) {
-				fiber.run(rows);
-			});
-			var r = Fiber.yield();
+			
+			var r = dbase.all(this.table_name);
 			
 			return rowsToModelInstances(tableName,r);
 		}
 
 		this.where = function(obj,cb) {
-			var Fiber = require('fibers');
-			var fiber = Fiber.current;
-			dbase.where(this.table_name,obj,function(rows,tableName) {
-				fiber.run(rows);	
-			});
-			var r = Fiber.yield();
+			var r = dbase.where(this.table_name,obj);
+		
 			return rowsToModelInstances(tableName,r);
 		}
 
@@ -221,33 +212,18 @@ function initModels() {
 			dbase.deleteAll(this.table_name);
 		}
 		this.find = function(id,cb) {
-			var Fiber = require('fibers');
-			var fiber = Fiber.current;
-			dbase.findRowsWithId(this.table_name,id,function(rows,tableName) {
-				fiber.run(rows)
-			});
-			var r = Fiber.yield();
+			
+			var r = dbase.findRowsWithId(this.table_name);
 			return rowsToModelInstances(tableName,r);
 		}
 		
 
 		this.first = function(cb) {
-			
-			var Fiber = require('fibers');
-			var fiber = Fiber.current;
-			dbase.findFirstRow(this.table_name,function(row,tableName) {
-				fiber.run(row);
-			});
-			var r = Fiber.yield();
+			var r = dbase.findFirstRow(this.table_name);
 			return rowToModelInstance(tableName,r);
 		}
 		this.last = function(cb) {
-			var Fiber = require('fibers');
-			var fiber = Fiber.current;
-			dbase.findLastRow(this.table_name,function(row,tableName) {
-				fiber.run(row);
-			});
-			var r = Fiber.yield();
+			dbase.findLastRow(this.table_name);
 			return rowToModelInstance(tableName,r);
 		}
 	}
