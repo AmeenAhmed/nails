@@ -198,7 +198,16 @@ if(process.argv[2] == 'db:migrate') {
 					}
 					migration.dropTable = function(tableName) {
 						console.log('Dropping table ' + tableName);
-						dbas
+						
+						dbase.dropTable(tableName);
+					}
+					
+					migration.renameTable = function(oldName,newName) {
+						console.log('Renaming table ' + oldName + ' to table ' + newName);
+						dbase.renameTable(tableName);
+					}
+					migration.addColumn = function(tableName,columnName,type,options) {
+						dbase.addColumn(tableName,columnName,type,options);
 					}
 					migration.up();
 					

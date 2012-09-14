@@ -1,14 +1,18 @@
 TODO : 
 
-1. The url with parameter functionality is buggy, have to correct that. (done)
-2. Implement named routes (done)
-3. helpers (doing)
-4. orm for models (done)
-5. Add functionality to the generator
-6. Pluggable view engines
-7. Plugins for other dbs than sqlite
-8. Synchronize all the db calls (done)
 
+chores  :
+
+- The url with parameter functionality is buggy, have to correct that. (done)
+- Implement named routes (done)
+- helpers (doing)
+- orm for models (done)
+- Synchronize all the db calls (done)
+- Add functionality to the generator
+- Pluggable view engines
+- Plugins for other dbs than sqlite
+- Finish db:migrate
+- Finish db:rollback
 
 
 
@@ -21,3 +25,4 @@ TODO :
 7. Add more functionality to the migrations
 8. Add scaffolding
 9. Implement a bundler
+10. Relations in models.

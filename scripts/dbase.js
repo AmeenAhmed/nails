@@ -114,8 +114,7 @@ exports.createModel = function(modelName,params) {
 
 exports.createTable = function(tableName,tableFields) {
 	console.log('creating table ' + tableName + 'with ' + util.inspect(tableFields));
-	//TODO : create a function for retrieving the current env and place it as name (its hardcoded now)
-	var name = 'development';
+	var name = getDbName();
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	var fields = 'id INTEGER PRIMARY KEY ASC AUTOINCREMENT';
 	for(var f in tableFields) {
@@ -129,6 +128,54 @@ exports.createTable = function(tableName,tableFields) {
 		}
 	}
 	var sql = 'CREATE TABLE ' + tableName +' (' + fields + ');';
+	console.log('issuing sql statement ' + sql);
+
+	 db.run(sql, function(err) {
+	 
+	 	console.log(err);
+	 
+	 });
+	 db.close();
+}
+
+function droptable(tableName) {
+	var name = getDbName();
+	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
+	var sql = 'DROP TABLE ' + tableName + ';';
+	console.log('issuing sql statement ' + sql);
+	
+	 db.run(sql, function(err) {
+	 
+	 	console.log(err);
+	 
+	 });
+	 db.close();
+}
+
+function renameTable(oldName,newName) {
+var name = getDbName();
+	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
+	var sql = 'ALTER TABLE ' + tableName + ' RENAME TO ' + newName + ';';
+	console.log('issuing sql statement ' + sql);
+
+	 db.run(sql, function(err) {
+	 
+	 	console.log(err);
+	 
+	 });
+	 db.close();
+}
+function addColumn(tableName,columnName,type,options) {
+	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
+	var sqlType = '';
+	if(type == 'string') {
+		sqlType = 'TEXT';
+	} else if(type == 'integer') {
+		sqlType = 'INT';
+	} else if(type == 'float') {
+		sqlType = 'REAL';
+	}
+	var sql = 'ALTER TABLE ' + tableName + ' ADD COLUMN ' + newName + ' ' + sqlType + ';';
 	console.log('issuing sql statement ' + sql);
 
 	 db.run(sql, function(err) {
