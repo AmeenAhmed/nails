@@ -22,7 +22,7 @@ chores  :
 4. pluggable view engines
 5. plugins for other dbs 
 6. View helpers
-7. Add more functionality to the migrations
+7. Add more functionality to the migrations (done)
 8. Add scaffolding
 9. Implement a bundler
 10. Relations in models.

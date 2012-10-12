@@ -211,18 +211,18 @@ function initModels() {
 		this.delete_all = function() {
 			dbase.deleteAll(this.table_name);
 		}
-		this.find = function(id,cb) {
+		this.find = function(id) {
 			
-			var r = dbase.findRowsWithId(this.table_name);
-			return rowsToModelInstances(tableName,r);
+			var r = dbase.findRowsWithId(this.table_name,id);
+			return rowToModelInstance(tableName,r[0]);
 		}
 		
 
-		this.first = function(cb) {
+		this.first = function() {
 			var r = dbase.findFirstRow(this.table_name);
 			return rowToModelInstance(tableName,r);
 		}
-		this.last = function(cb) {
+		this.last = function() {
 			dbase.findLastRow(this.table_name);
 			return rowToModelInstance(tableName,r);
 		}
