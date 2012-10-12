@@ -11,8 +11,8 @@ chores  :
 - Add functionality to the generator
 - Pluggable view engines
 - Plugins for other dbs than sqlite
-- Finish db:migrate
-- Finish db:rollback
+- Finish db:migrate (done)
+- Finish db:rollback (done)
 
 
 

@@ -68,22 +68,31 @@ function generateTimestamp() {
 	return date.getYear() + month + dateNum + hours + minutes + seconds;
 }
 exports.generateTimestamp = generateTimestamp;
+
+exports.writeSchema = function(tableName,params) {
+	console.log('Creating the file ' + process.cwd() + '/db/' + tableName+'_schema.js');
+	var str = 'exports.schema = {\n\n';
+	var start = false;
+	for(var key in params) {
+		if(!start) {
+			start = true;
+		} else {
+			str += ',\n'
+		}
+		str += '\t' + key + ':\'' + params[key] + '\'';
+	}	
+	str += '\n\n}';
+    
+	fs.writeFileSync(process.cwd() + '/db/' + tableName+'_schema.js',str,'utf-8');
+	console.log('****************************************************************');
+	console.log('STR : ' + str);
+	console.log('****************************************************************');
+}
 exports.createModel = function(modelName,params) {
 	console.log('Creating the model file at ' + process.cwd() + '/app/models/' + modelName + '.js');
 	
 	fs.writeFileSync(process.cwd() + '/app/models/' + modelName + '.js','exports.'+modelName +' = {\n\n\n}');
-	console.log('Creating the file ' + process.cwd() + '/db/' + modelName+'_schema.js');
-	var str = 'exports.schema = {\n\n';
-	for(var p=0;p<params.length-1;p++) {
-		var attr = params[p].split(':');
-		str += '\'' + attr[0] + '\' : \'' + attr[1] + '\',\n';
-	}
-	var attr = params[params.length-1].split(':');
-	str += '\'' + attr[0] + '\' : \'' + attr[1] + '\'';
 	
-	str += '\n\n}';
-
-	fs.writeFileSync(process.cwd() + '/db/' + modelName+'_schema.js',str,'utf-8');
 	var timestamp = generateTimestamp();
  	console.log('Creating the migration ' + process.cwd() + '/db/migrate/' + timestamp + '_' + modelName + '.js');
  	paramsObject = '{';
@@ -116,8 +125,6 @@ exports.createModel = function(modelName,params) {
 
 exports.createTable = function(tableName,tableFields) {
 	console.log('creating table ' + tableName + 'with ' + util.inspect(tableFields));
-	var name = getDbName();
-	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	var fields = 'id INTEGER PRIMARY KEY ASC AUTOINCREMENT';
 	for(var f in tableFields) {
 		fields += ', ' + f + ' ';
@@ -136,40 +143,26 @@ exports.createTable = function(tableName,tableFields) {
 	var r = runQuery(sql);
 	if(r) {
 		console.log("Create Table error : " + r);	
+	} else {
+		console.log('Create table successfull!');
 	}
 }
 
 exports.dropTable = function(tableName) {
-	var name = getDbName();
-	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
+	
 	var sql = 'DROP TABLE ' + tableName + ';';
 	console.log('issuing sql statement ' + sql);
 	
-	 db.run(sql, function(err) {
-	 
-	 	console.log(err);
-	 
-	 });
-	 db.close();
+	runQuery(sql);
 }
 
 exports.renameTable = function(oldName,newName) {
-var name = getDbName();
-	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	var sql = 'ALTER TABLE ' + oldName + ' RENAME TO ' + newName + ';';
 	console.log('issuing sql statement ' + sql);
+	runQuery(sql);
 
-	 db.run(sql, function(err) {
-	 
-	 	console.log(err);
-	 
-	 });
-	 db.close();
 }
 exports.addColumn = function(tableName,columnName,type,options) {
-	var name = getDbName();
-
-	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 	var sqlType = '';
 	if(type == 'string') {
 		sqlType = 'TEXT';
@@ -182,7 +175,7 @@ exports.addColumn = function(tableName,columnName,type,options) {
 	console.log('issuing sql statement ' + sql);
 
 	runQuery(sql);
-	 db.close();
+
 }
 exports.renameColumn = function(tableName,columnName,newColumnName) {
 
@@ -244,20 +237,19 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 	console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
-	
-	db.close();		
-	 
+	return new_schema;
 }
 exports.changeColumn = function(tableName,columnName,type,options) {
 	this.renameTable(tableName,'temp_' + tableName);
 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	console.log('Schema in change column : ' + util.inspect(schema));
 	var new_schema = schema;
 	new_schema[columnName] = type;
 	
-	createTable(tableName, new_schema);
+	this.createTable(tableName, new_schema);
 	var new_keys = '';
 	var old_keys = '';
- 	for(var key in newSchema) {
+ 	for(var key in new_schema) {
  		if(new_keys != '') {
  			new_keys +=',';
  		} 
@@ -272,20 +264,25 @@ exports.changeColumn = function(tableName,columnName,type,options) {
 	sql = 'INSERT INTO tableName('+new_keys+') SELECT ' + old_keys + ' FROM temp_' + tableName; 
 	runQuery(sql);
 	
-	dropTable('temp_'+tableName);
+	this.dropTable('temp_'+tableName);
 	 
 	
 }
 exports.removeColumn = function(tableName,columnName) {
 	this.renameTable(tableName,'temp_' + tableName);
 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	var new_schema = schema;
-	new_schema[columnName] = undefined;
+	var new_schema = {};
 	
-	createTable(tableName, new_schema);
+	for(var key in schema) {
+		if(key != columnName) {
+			new_schema[key] = schema[key];
+		}
+	}
+	
+	this.createTable(tableName, new_schema);
 	var new_keys = '';
 	var old_keys = '';
- 	for(var key in newSchema) {
+ 	for(var key in new_schema) {
  		if(new_keys != '') {
  			new_keys +=',';
  		} 
@@ -300,9 +297,9 @@ exports.removeColumn = function(tableName,columnName) {
 	sql = 'INSERT INTO tableName('+new_keys+') SELECT ' + old_keys + ' FROM temp_' + tableName; 
 	runQuery(sql);
 	
-	dropTable('temp_'+tableName);
+	this.dropTable('temp_'+tableName);
 	 
-	
+	return new_schema;
 }
 function runQuery(sql) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');

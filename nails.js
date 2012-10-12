@@ -146,7 +146,13 @@ if(process.argv[2] == 'db:create') {
 	console.log("Creating a database in " + dbname + ' environment');
 	dbase.create(dbname);
 }
-
+function sleep(ms) {
+    var fiber = Fiber.current;
+    setTimeout(function() {
+        fiber.run();
+    }, ms);
+    Fiber.yield();
+}
 if(process.argv[2] == 'db:migrate') {
 	function migrate() {
 		console.log('migrating...');
@@ -200,7 +206,7 @@ if(process.argv[2] == 'db:migrate') {
 	
 			for(var t in new_timestamps) {
 				for(var m in migrations) {
-					
+					require('module')._cache={};
 					if(migrations[m].match(new_timestamps[t])) {
 						var currentMigration = migrations[m];
 						
@@ -211,33 +217,55 @@ if(process.argv[2] == 'db:migrate') {
 								console.log('Table : ' + tableName);
 								console.log('Fields : ' + util.inspect(fields));
 								dbase.createTable(tableName,fields);
-		
+								dbase.writeSchema(tableName,fields);
 							}
 							migration.dropTable = function(tableName) {
 								console.log('Dropping table ' + tableName);
 								
 								dbase.dropTable(tableName);
+								
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
 							}
 							
 							migration.renameTable = function(oldName,newName) {
 								console.log('Renaming table ' + oldName + ' to table ' + newName);
-								dbase.renameTable(tableName);
+								dbase.renameTable(oldName,newName);
+								var schema = require(process.cwd() + '/db/' + oldName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +oldName + '_schema.js');
+								dbase.writeSchema(newName,schema);
 							}
 							migration.addColumn = function(tableName,columnName,type,options) {
 								console.log('Adding column ' + columnName);
 								dbase.addColumn(tableName,columnName,type,options);
+								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								schema[columnName] = type;
+								dbase.writeSchema(tableName,schema);
 							}
 							migration.renameColumn = function(tableName,columnName,newColumnName) {
-								dbase.renameColumn(tableName,columnName,newColumnName);
+								var newSchema = dbase.renameColumn(tableName,columnName,newColumnName);
+								
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								console.log('*************************************************');
+								console.log('Rename new schema : ' + util.inspect(newSchema));
+								console.log('*************************************************');
+								dbase.writeSchema(tableName,newSchema);
 							}
 							migration.changeColumn = function(tableName,columnName,type,options) {
 								dbase.changeColumn(tableName,columnName,type,options);
+								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								schema[columnName] = type;
+								dbase.writeSchema(tableName,schema);
 							}
 							migration.removeColumn = function(tableName,columnName) {
-								dbase.removeColumn(tableName,columnName);
+								var newSchema = dbase.removeColumn(tableName,columnName);
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								dbase.writeSchema(tableName,newSchema);
 							}
 							console.log(util.inspect(migration));
 							migration.up();
+						
 					}	
 						
 				}
@@ -251,6 +279,139 @@ if(process.argv[2] == 'db:migrate') {
 	Fiber(migrate).run();
 }
 
+if(process.argv[2] == 'db:rollback') {
+	function rollback() {
+		console.log('migrating...');
+		var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
+		console.log('Found these migrations..');
+		console.log(migrations);
+		timestamps = [];
+		currentTimestamp = 0;
+		for (var file in migrations) {
+			var timestamp = migrations[file].split('_')[0];
+			var label = migrations[file].split('_')[1];
+			console.log('Label [' + label + '] with timestamp ' + timestamp);
+			timestamps.push(parseInt(timestamp));
+		}
+		sort_function = function(a,b) {
+			if(a < b) return -1;
+			else return 1;
+		}
+		timestamps.sort(sort_function);	
+		
+		if(timestamps.length == 0) {
+			console.log('No migrations found!');
+			return;
+		}
+	    var fiber = Fiber.current;
+		dbase.getCurrentMigrationTimestamp(function(rows) {
+			fiber.run(rows);
+		});
+		var rows = Fiber.yield();
+		if(!rows) return;
+		console.log('The current timestamp is ' + rows[0]['current_timestamp']);
+		var current_timestamp = rows[0]['current_timestamp'];
+		var ct = -1;
+		for(var i in timestamps) {
+			if(timestamps[i] == current_timestamp) {
+				ct = i;
+			}
+		}
+		if(ct != 0) {
+			var new_timestamp = timestamps[ct-1];
+		} else {
+			var new_timestamp = 0;
+		}
+		var currentMigration = '';
+		console.log(timestamps[ct]);
+		for(var key in migrations) {
+			if(migrations[key].match(timestamps[ct])) {
+				currentMigration = migrations[key];
+				break;
+			}
+		}
+		console.log(currentMigration);
+		var migration = require(process.cwd() + '/db/migrate/' + currentMigration).migrate;
+							migration.createTable = function(tableName,fields) {
+		
+								console.log('Table : ' + tableName);
+								console.log('Fields : ' + util.inspect(fields));
+								dbase.createTable(tableName,fields);
+								dbase.writeSchema(tableName,fields);
+							}
+							migration.dropTable = function(tableName) {
+								console.log('Dropping table ' + tableName);
+								
+								dbase.dropTable(tableName);
+								
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+							}
+							
+							migration.renameTable = function(oldName,newName) {
+								console.log('Renaming table ' + oldName + ' to table ' + newName);
+								dbase.renameTable(oldName,newName);
+								var schema = require(process.cwd() + '/db/' + oldName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +oldName + '_schema.js');
+								dbase.writeSchema(newName,schema);
+							}
+							migration.addColumn = function(tableName,columnName,type,options) {
+								console.log('Adding column ' + columnName);
+								dbase.addColumn(tableName,columnName,type,options);
+								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								schema[columnName] = type;
+								dbase.writeSchema(tableName,schema);
+							}
+							migration.renameColumn = function(tableName,columnName,newColumnName) {
+								var newSchema = dbase.renameColumn(tableName,columnName,newColumnName);
+								
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								console.log('*************************************************');
+								console.log('Rename new schema : ' + util.inspect(newSchema));
+								console.log('*************************************************');
+								dbase.writeSchema(tableName,newSchema);
+							}
+							migration.changeColumn = function(tableName,columnName,type,options) {
+								dbase.changeColumn(tableName,columnName,type,options);
+								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								schema[columnName] = type;
+								dbase.writeSchema(tableName,schema);
+							}
+							migration.removeColumn = function(tableName,columnName) {
+								var newSchema = dbase.removeColumn(tableName,columnName);
+								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+								dbase.writeSchema(tableName,newSchema);
+							}
+							console.log(util.inspect(migration));
+							migration.down();
+		dbase.setCurrentMigrationTimestamp(new_timestamp);
+	}
+	
+	var step = 1;
+	
+	if(process.argv[3]) {
+		var s = process.argv[3].split('=');
+		if(s.length == 2) {
+			if(s[0] == 'STEP') {
+				step = parseInt(s[1]);
+				if(step == 0) {
+					step = 1;
+				}
+			}
+		}
+	}
+	
+	Fiber(function() {
+		for(var i=0; i<step; i++) {
+			rollback();
+		
+		}
+	}).run();
+	
+	
+	
+}
 
 if(process.argv[2] == 'env') {
 	var environment_file = require(process.cwd() + '/config/environment.js');
@@ -295,7 +456,7 @@ if(process.argv[2] == 'env') {
 
 if(process.argv[2] == 'check') {
 	//dbase.setCurrentMigrationTimestamp(0);
-	dbase.getRowsFromTable('User',function(rows) {
+	dbase.getRowsFromTable('sqlite_master',function(rows) {
 		console.log(rows);
 	});
 }
@@ -311,7 +472,7 @@ if(process.argv[2] == 'console') {
 					console.log('Object is being saved');
 				}
 			}
-		},
+		}
 
 	}
 	repl.start({
@@ -319,3 +480,5 @@ if(process.argv[2] == 'console') {
 		useGlobal:true
 	});
 }
+
+
