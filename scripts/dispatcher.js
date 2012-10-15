@@ -129,6 +129,12 @@ function initModels() {
 		for(var p in props) {
 			this[p] = undefined;
 		}
+		
+		var model = require(process.cwd() + '/app/models/' + this.table_name + '.js');
+		
+		for(var m in model[this.table_name]) {
+			this[m] = model[this.table_name][m];
+		}
 
 		if(obj) {
 			for(var o in obj) {
@@ -136,7 +142,66 @@ function initModels() {
 			}
 		}
 		this.save = function() {
-			return dbase.saveRecord(this.table_name,this);
+			
+			if(this.validate()) {
+				dbase.saveRecord(this.table_name,this);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		this.validate = function() {
+			console.log('**********************************************************************')
+			var schema = require(process.cwd() + '/db/' + this.table_name + '_schema.js').schema;
+			var bool = true;
+			var errors = [];
+			for(var prop in schema) {
+				console.log('Validation for ' + prop + '=> ' + util.inspect(this.validates[prop]));
+				if(this.validates[prop].presence == true) {
+					if(this[prop]) {
+						console.log('validation passed!');
+					} else {
+						bool = false;
+						errors.push(prop + ' should not be null');
+						console.log('validation failed : ' + prop + ' should not be null');	
+					}
+					
+				}
+				if(this.validates[prop].uniqueness == true) {
+					
+					console.log(prop + ' should be unique');
+				}
+				if(this.validates[prop].length) {
+					var min = this.validates[prop].length.minimum;
+					var max = this.validates[prop].length.maximum;
+					if(min) {
+						if(this[prop] && this[prop].length > min) {
+							console.log('validation passed!');
+						} else {
+							bool = false;
+							errors.push(prop + ' should be more than ' + min + ' chars');
+							console.log('validation failed :' + prop + ' should be more than ' + min + ' chars');	
+						}
+						
+					}
+					if(max) {
+						if(this[prop] && this[prop].length < max) {
+							console.log('validation passed!');
+						} else {
+							bool = false;
+							errors.push(prop + ' should be less than ' + max + ' chars');
+							console.log('validation failed : ' + prop + ' should be less than ' + max + ' chars');	
+						}
+						
+					}
+				}
+				
+			}
+			
+			this.errors = errors;
+			console.log('**********************************************************************')
+			
+			return bool;
 		}
 		this.clone = function() {
 			return this;
@@ -214,6 +279,9 @@ function initModels() {
 		this.find = function(id) {
 			
 			var r = dbase.findRowsWithId(this.table_name,id);
+			if(r[0] == undefined) {
+				return null;
+			}
 			return rowToModelInstance(tableName,r[0]);
 		}
 		
