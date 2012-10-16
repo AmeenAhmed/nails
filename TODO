@@ -25,4 +25,5 @@ chores  :
 7. Add more functionality to the migrations (done)
 8. Add scaffolding
 9. Implement a bundler
-10. Relations in models.
+10. Relations in models. (done)
+11. Render JSON - XML (done)

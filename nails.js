@@ -462,23 +462,32 @@ if(process.argv[2] == 'check') {
 }
 
 if(process.argv[2] == 'console') {
-	user = {
-		new : function(n,r) {
-			console.log('A new user object');
-			return {
-				name : n,
-				role : r,
-				save : function(){
-					console.log('Object is being saved');
-				}
-			}
+	Fiber(function() {
+		var dispatcher = require('./scripts/dispatcher.js');
+		var modelClasses = dispatcher.initModels();
+		
+		for(var model in modelClasses) {
+			global[model] = modelClasses[model];
 		}
-
-	}
-	repl.start({
-		prompt:'nails>',
-		useGlobal:true
-	});
+		var vm = require('vm');
+		
+		
+		while(1) {
+			console.log('nails>');
+			var buf = new Buffer();
+			var cmd = fs.readSync(process.stdin,buf,0,12,null);
+			console.log('CMD : ' + cmd);
+		}
+		//vm.runInNewContext(actionFunction,context);
+		/*var r = repl.start({
+			prompt:'nails>',
+			useGlobal:true,
+			
+		});*/
+		
+		
+	}).run();
+	
 }
 
 

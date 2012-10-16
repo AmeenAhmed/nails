@@ -342,7 +342,7 @@ function runQueryGetAll(tableName,point,cb) {
 
 function runQueryGetWhere(tableName,obj,cb) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
-
+	console.log(obj);
 	var where = ' WHERE';
 	var i=0;
 	for(var o in obj) {
@@ -354,6 +354,7 @@ function runQueryGetWhere(tableName,obj,cb) {
 		i++;
 	}
 	var fiber = Fiber.current;
+	console.log('SELECT * FROM ' + tableName + where + ';');
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
 	 	//cb(rows,tableName);
 	 	fiber.run(rows);
@@ -403,9 +404,15 @@ exports.deleteRowsWithId = function(tableName,id) {
 exports.deleteAll = function(tableName) {
 	runQuery('DELETE FROM ' + tableName);
 }
-exports.findRowsWithId = function(tableName,id,cb) {
+exports.findRowsWithId = function(tableName,id) {
 	var obj = {};
 	obj['id'] = id;
+	return runQueryGetWhere(tableName,obj);
+}
+exports.findRowsWithProp = function(tableName,key,value) {
+	var obj = {};
+	obj[key] = value;
+	console.log('Inside Frwp: ' + obj);
 	return runQueryGetWhere(tableName,obj);
 }
 exports.findFirstRow = function(tableName) {
