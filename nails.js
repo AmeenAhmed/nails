@@ -27,6 +27,14 @@ if(process.argv.length == 4) {
 
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/controllers' );
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/controllers');
+		
+		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/helpers' );
+		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/helpers');
+		
+		console.log('Creating file ' + process.cwd() +'/' + process.argv[3] + '/app/helpers/application_helper.js');
+		fs.writeFileSync(process.cwd() +'/' + process.argv[3] + '/app/helpers/application_helper.js',
+			'exports.application = {\n\n\n}');
+			
 
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/models' );
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/models');
@@ -75,6 +83,9 @@ if(process.argv.length == 4) {
 		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public/css');
 		fs.mkdirSync(process.cwd() + '/' + process.argv[3]+'/public/css' );
 
+		console.log('Creating file ' + process.cwd()+'/'+process.argv[3] + '/bundle.js');
+		fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/bundle.js','exports.bundle = [\n\n];');
+	
 		console.log('Creating file ' + process.cwd()+'/'+process.argv[3] + '/nmake.js');
 		fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/nmake.js','//contents still need to be added here');
 
@@ -109,6 +120,9 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 			//console.log(JSON.stringify(routes.routes));
 			console.log('Creating directory ' + 'app/views/' + process.argv[4]);
 			fs.mkdirSync(process.cwd() + '/app/views/' + process.argv[4]);
+			console.log('Creatung the ' + process.argv[4] + ' helper');
+			fs.writeFileSync(process.cwd() + '/app/helpers/' + process.argv[4] + '_helper.js',
+				'exports.' + process.argv[4] + ' = {\n\n\n}');
 		} else {
 			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');
 		}
@@ -499,5 +513,37 @@ if(process.argv[2] == 'console') {
 	}).run();
 	
 }
+
+if(process.argv[2] == 'bundle' && process.argv[3] == 'install') {
+	var bundle = require(process.cwd() + '/bundle.js').bundle;
+	var exec = require('exec-sync');
+	var colors = require('colors');
+	var file = 'exports.bundle = [';
+	function fileAdd(i,file) {
+		if(i != 0) {
+				file += ',';
+			}
+		file += '\n\t\'' + bundle[i] + '\'';
+		return file;
+	}  
+	for(var i=0; i < bundle.length; i++) {
+		util.print('\t' + bundle[i])
+		var str = exec('npm install ' + bundle[i],true);
+		if(str.stderr.match('http 200')) {
+			console.log('\t intsalled ok'.green);
+			file = fileAdd(i,file);
+		}
+		if(str.stderr.match('http 404')) {
+			console.log('\t not found'.red);
+		}
+		if(str.stderr.match('http 304')) {
+			console.log('\t [ok]'.green);
+			file = fileAdd(i,file);
+		}
+		
+	}
+	file += '\n];'
+	fs.writeFileSync(process.cwd() + '/config/bundle.js',file,'utf-8');
+} 
 
 

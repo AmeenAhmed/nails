@@ -30,9 +30,20 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	}
 	
 	context.util = require('util');
+	context.fs = require('fs');
 	context.params = params;
 	context.redirect_to = helpers.redirect_to;
 	context.render = helpers.render;
+	
+	if(fs.existsSync(process.cwd() + '/config/bundle.js')) {
+		var bundle = require(process.cwd() + '/config/bundle.js').bundle;
+		
+		for(var i=0; i < bundle.length; i++) {
+			context[bundle[i]] = require(bundle[i]);
+		}
+	} else {
+		console.log('Bundle not found. Do bundle install!');
+	}
 		
 	for(var key in route_helpers) {
 		context[key] = route_helpers[key];
@@ -74,6 +85,19 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	for(var key in route_helpers) {
 		viewContext[key] = route_helpers[key];
 	}
+	var helper = require(process.cwd() + '/app/helpers/' + controllerName + '_helper.js')[controllerName];
+	
+	var appHelper = require(process.cwd() + '/app/helpers/application_helper.js').application;
+	for(var key in appHelper) {
+		viewContext[key] = appHelper[key];
+	}
+	for(var key in modelClasses) {
+		viewContext[key] = modelClasses[key];
+	}
+	for(var key in helper) {
+		viewContext[key] = helper[key];
+	}
+	console.log(util.inspect(helper))
 	
 	viewContext['$'] = context['$'];
 	render(response,viewContext);
