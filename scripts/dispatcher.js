@@ -226,17 +226,23 @@ function initModels() {
 				var modelClass = modelClasses[inf.camelize(this.belongsTo)];
 				if(inf.camelize(modelClass.hasOne) == this.table_name) {
 					var myClass = modelClasses[this.table_name];
-					var row = myClass.findBy(this.belongsTo + '_id',this[this.belongsTo + '_id']);
-					console.log('ROW : ' + util.inspect(row));
-					console.log(row.length);
-					if(row.length) {
-						console.log('validation failed : ' + this.table_name + ' for ' + this.belongsTo + ' : ' 
-							+ this[this.belongsTo + '_id']
-							+ ' already exists' );
+					if(this[this.belongsTo + '_id']) {
+						var row = myClass.findBy(this.belongsTo + '_id',this[this.belongsTo + '_id']);
+						console.log('ROW : ' + util.inspect(row));
+						console.log(row.length);
+						if(row.length) {
+							console.log('validation failed : ' + this.table_name + ' for ' + this.belongsTo + ' : ' 
+								+ this[this.belongsTo + '_id']
+								+ ' already exists' );
+							bool = false;
+							errors.push(this.table_name + ' for ' + this.belongsTo + ' : ' 
+								+ this[this.belongsTo + '_id']
+								+ ' already exists');
+						}
+					} else {
+						console.log('validation failed : ' + this.belongsTo + '_id required' );
 						bool = false;
-						errors.push('validation failed : ' + this.table_name + ' for ' + this.belongsTo + ' : ' 
-							+ this[this.belongsTo + '_id']
-							+ ' already exists');
+						errors.push(this.belongsTo + '_id required' );
 					}
 				}
 			}

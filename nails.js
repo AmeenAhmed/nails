@@ -466,26 +466,36 @@ if(process.argv[2] == 'console') {
 		var dispatcher = require('./scripts/dispatcher.js');
 		var modelClasses = dispatcher.initModels();
 		
-		for(var model in modelClasses) {
-			global[model] = modelClasses[model];
-		}
+		
 		var vm = require('vm');
-		
-		
-		while(1) {
-			console.log('nails>');
-			var buf = new Buffer();
-			var cmd = fs.readSync(process.stdin,buf,0,12,null);
-			console.log('CMD : ' + cmd);
+		context = {};
+		for(var model in modelClasses) {
+			context[model] = modelClasses[model];
 		}
-		//vm.runInNewContext(actionFunction,context);
-		/*var r = repl.start({
-			prompt:'nails>',
-			useGlobal:true,
-			
-		});*/
+	 	process.stdin.resume();
+	  	process.stdin.setEncoding('utf8');
 		
-		
+		var fiber = Fiber.current;
+	  	process.stdin.on('data', function (text) {
+	  		fiber.run(text);
+	    		
+	  	});
+	  	
+	  	while(1) {
+	  		process.stdin.resume();
+	  		util.print('nails$>');
+		  	var text = Fiber.yield();
+		  	process.stdin.pause();
+		    if (text === 'quit') {
+		    	done();
+		    }
+		    processText(text);
+
+		    
+	    }
+	  	function processText(text) {
+	  		console.log(vm.runInNewContext(text,context));
+	  	}
 	}).run();
 	
 }
