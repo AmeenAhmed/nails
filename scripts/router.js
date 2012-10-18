@@ -51,6 +51,7 @@ exports.route = function(url,method,query,req,res) {
 	var route_file = require(process.cwd() + '/config/routes.js');
 	var route_helpers = initialize(route_file.routes);
 	method = method.toLowerCase();
+	console.log('method:' + method);
 	var params = {};
 	if(query) {
 		params = utils.queryParser(query);
@@ -141,9 +142,10 @@ exports.route = function(url,method,query,req,res) {
 function routeRequest(route,url,method,params,req,res,route_helpers) {
 	var controllerName = '';
 	var actionName = '';
+	
 	if(route.match) { 
 		if(route.via && route.via.indexOf(method) == -1) {
-			return exceptions.noRouteMatch(method,url);
+			res.end(exceptions.noRouteMatch(method,url));
 		} 
 		controllerName = utils.controllerFromRoute(route.match);
 		actionName = utils.actionFromRoute(route.match);
@@ -161,7 +163,7 @@ function routeRequest(route,url,method,params,req,res,route_helpers) {
 		controllerName = utils.controllerFromRoute(route.delete);
 		actionName = utils.actionFromRoute(route.delete);		
 	} else {
-		return exceptions.noRouteMatch(method,url);
+		res.end(exceptions.noRouteMatch(method,url));
 	}
 	return dispatcher.runAndRender(controllerName,actionName,url,params,req,res,route_helpers);
 }

@@ -1,5 +1,5 @@
 var util = require('util');
-exports.redirect_to = function(url) {
+exports.redirectTo = function(url) {
 	return { status: 302, response:url };
 }
 

@@ -29,3 +29,42 @@ chores  :
 11. Render JSON - XML (done)
 12. Nails console (done)
 13. Logging
+
+
+
+
+
+------------------------------------------------------
+		List of form helpers in views
+------------------------------------------------------
+
+- formTag (done)
+- formEnd (done)
+- labelTag (done)
+- textField (done)
+- passwordField (done)
+- textArea (done)
+- checkBox (done)
+- radioButton (done)
+- button 
+- submit 
+- select (done)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

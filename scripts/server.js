@@ -17,10 +17,12 @@ exports.start_server = function() {
 			var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
 			
 			if(req.method == 'GET' || req.method == 'DELETE') {
+				console.log('Request method : ' + req.method);
 				var reqUrl = url.parse(req.url); 
 				var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res);
 				
 			} else if(req.method == 'POST' || req.method == 'PUT') {
+				console.log('Request method : ' + req.method);
 				var postData = '';
 				req.on('data',function(chunk) {
 				

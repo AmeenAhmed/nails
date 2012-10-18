@@ -6,6 +6,7 @@ var exceptions = require('./exceptions');
 var utils = require('./utils');
 var dbase = require('./dbase');
 var util = require('util');
+var viewHelpers = require('./view_helpers');
 
 exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
@@ -32,7 +33,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	context.util = require('util');
 	context.fs = require('fs');
 	context.params = params;
-	context.redirect_to = helpers.redirect_to;
+	context.redirectTo = helpers.redirectTo;
 	context.render = helpers.render;
 	
 	if(fs.existsSync(process.cwd() + '/config/bundle.js')) {
@@ -80,16 +81,18 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	}
 	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
 	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
-
+	
 	var viewContext = {};
 	for(var key in route_helpers) {
 		viewContext[key] = route_helpers[key];
 	}
 	var helper = require(process.cwd() + '/app/helpers/' + controllerName + '_helper.js')[controllerName];
-	
 	var appHelper = require(process.cwd() + '/app/helpers/application_helper.js').application;
 	for(var key in appHelper) {
 		viewContext[key] = appHelper[key];
+	}
+	for(var key in viewHelpers) {
+		viewContext[key] = viewHelpers[key];
 	}
 	for(var key in modelClasses) {
 		viewContext[key] = modelClasses[key];
