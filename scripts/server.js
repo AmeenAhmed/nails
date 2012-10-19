@@ -3,8 +3,19 @@ exports.start_server = function() {
 	var http = require('http');
 	var url = require('url');
 	var Fiber = require('fibers');
+	var util = require('util');
+	var crypto = require('crypto');
 	http.createServer(function(req,res) {
 		Fiber(function() { 
+			cookies = {}
+			var c = req.headers.cookie.split(';');
+			for(var i=0; i<c.length; i++) {
+				var cks = c[i].split('=');
+				cookies[cks[0].trim()] = cks[1];
+			}
+
+			console.log('Cookies: ' + util.inspect(cookies));
+			//res.setHeader('Set-Cookie','user=123');
 			process.on('uncaughtException', function(err) {
 				console.log(err.message);
 				
