@@ -4,8 +4,21 @@ exports.queryParser = function (query) {
 	var params = query.split('&');
 
 	for(var i=0;i<params.length;i++) {
-		obj['_'+params[i].split('=')[0]] = params[i].split('=')[1];
+		
+		var key = params[i].split('=')[0];
+		console.log('Key = ' + key);
+		if(key.match('%5B')) {
+			console.log('params : ' + key);
+			if(!obj[key.split('%5B')[0]]) {
+				obj[key.split('%5B')[0]] = {};
+			}
+			obj[key.split('%5B')[0]][key.split('%5B')[1].split('%5D')[0]] = params[i].split('=')[1];
+		} else {
+			obj[params[i].split('=')[0]] = params[i].split('=')[1];
+		}
+		
 	}
+	
 	return obj;
 }
 exports.addLeadingSlash = function (str) {

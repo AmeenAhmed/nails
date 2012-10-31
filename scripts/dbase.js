@@ -21,7 +21,10 @@ exports.create = function(name) {
 	
 	db.close();
 }
-
+exports.getSchema = function(mName) {
+	var schema = require(process.cwd() + '/db/' + mName + '_schema.js').schema;
+	return schema;
+}
 exports.getCurrentMigrationTimestamp = function(cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
@@ -84,9 +87,9 @@ exports.writeSchema = function(tableName,params) {
 	str += '\n\n}';
     
 	fs.writeFileSync(process.cwd() + '/db/' + tableName+'_schema.js',str,'utf-8');
-	console.log('****************************************************************');
-	console.log('STR : ' + str);
-	console.log('****************************************************************');
+	//console.log('****************************************************************');
+	//console.log('STR : ' + str);
+	//console.log('****************************************************************');
 }
 exports.createModel = function(modelName,params) {
 	console.log('Creating the model file at ' + process.cwd() + '/app/models/' + modelName + '.js');
@@ -124,7 +127,7 @@ exports.createModel = function(modelName,params) {
 
 
 exports.createTable = function(tableName,tableFields) {
-	console.log('creating table ' + tableName + 'with ' + util.inspect(tableFields));
+	//console.log('creating table ' + tableName + 'with ' + util.inspect(tableFields));
 	var fields = 'id INTEGER PRIMARY KEY ASC AUTOINCREMENT';
 	for(var f in tableFields) {
 		fields += ', ' + f + ' ';
@@ -137,7 +140,7 @@ exports.createTable = function(tableName,tableFields) {
 		}
 	}
 	var sql = 'CREATE TABLE ' + tableName +' (' + fields + ');';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 
 	
 	var r = runQuery(sql);
@@ -151,14 +154,14 @@ exports.createTable = function(tableName,tableFields) {
 exports.dropTable = function(tableName) {
 	
 	var sql = 'DROP TABLE ' + tableName + ';';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 }
 
 exports.renameTable = function(oldName,newName) {
 	var sql = 'ALTER TABLE ' + oldName + ' RENAME TO ' + newName + ';';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 	runQuery(sql);
 
 }
@@ -172,7 +175,7 @@ exports.addColumn = function(tableName,columnName,type,options) {
 		sqlType = 'REAL';
 	}
 	var sql = 'ALTER TABLE ' + tableName + ' ADD COLUMN ' + columnName + ' ' + sqlType + ';';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 
 	runQuery(sql);
 
@@ -181,12 +184,12 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 
 	
 	var sql = 'ALTER TABLE ' + tableName + ' RENAME TO ' + tableName + '_temp;';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 	
  	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	console.log('Old schema : ' + util.inspect(schema));
+	//console.log('Old schema : ' + util.inspect(schema));
 	var new_schema = {};
 	
 	for(var key in schema) {
@@ -210,7 +213,7 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 		}
 	}
 	sql = 'CREATE TABLE ' + tableName +' (' + fields + ');';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 		 	
@@ -234,7 +237,7 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 	runQuery(sql);
 	
 	var sql = 'DROP TABLE ' + tableName + '_temp;';
-	console.log('issuing sql statement ' + sql);
+	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 	return new_schema;
@@ -242,7 +245,7 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 exports.changeColumn = function(tableName,columnName,type,options) {
 	this.renameTable(tableName,'temp_' + tableName);
 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	console.log('Schema in change column : ' + util.inspect(schema));
+	//console.log('Schema in change column : ' + util.inspect(schema));
 	var new_schema = schema;
 	new_schema[columnName] = type;
 	
@@ -342,7 +345,7 @@ function runQueryGetAll(tableName,point,cb) {
 
 function runQueryGetWhere(tableName,obj,cb) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
-	console.log(obj);
+	//console.log(obj);
 	var where = ' WHERE';
 	var i=0;
 	for(var o in obj) {
@@ -354,7 +357,7 @@ function runQueryGetWhere(tableName,obj,cb) {
 		i++;
 	}
 	var fiber = Fiber.current;
-	console.log('SELECT * FROM ' + tableName + where + ';');
+	//console.log('SELECT * FROM ' + tableName + where + ';');
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
 	 	//cb(rows,tableName);
 	 	fiber.run(rows);
@@ -412,7 +415,7 @@ exports.findRowsWithId = function(tableName,id) {
 exports.findRowsWithProp = function(tableName,key,value) {
 	var obj = {};
 	obj[key] = value;
-	console.log('Inside Frwp: ' + obj);
+	//console.log('Inside Frwp: ' + obj);
 	return runQueryGetWhere(tableName,obj);
 }
 exports.findFirstRow = function(tableName) {

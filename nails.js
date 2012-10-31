@@ -151,6 +151,34 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 		} else {
 			console.log('Generating a migration requires a name');
 		}
+	} else if(process.argv[3] == 'scaffold') {
+		if(process.argv[4]) {
+			if(process.argv.length >= 6) {
+				params = [];
+				var len = process.argv.length - 5;
+				for(var i=0;i<len;i++) {
+					params.push(process.argv[5+i]);
+				}
+				console.log(params);
+				dbase.createModel(process.argv[4],params);
+				
+				//TODO : inflection to be added
+				console.log('Creating the '+process.argv[4]+' controller')
+				fs.writeFileSync(process.cwd() + '/app/controllers/' + process.argv[4] + '_controller.js',
+				'exports.' + process.argv[4] + ' = {\n\n\n}');
+			
+				console.log('Creating directory ' + 'app/views/' + process.argv[4]);
+				fs.mkdirSync(process.cwd() + '/app/views/' + process.argv[4]);
+				console.log('Creatung the ' + process.argv[4] + ' helper');
+				fs.writeFileSync(process.cwd() + '/app/helpers/' + process.argv[4] + '_helper.js',
+					'exports.' + process.argv[4] + ' = {\n\n\n}');
+				
+			} else {
+				console.log('Generating a model needs attributes');
+			}
+		} else {
+			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');	
+		}
 	}
 }
 

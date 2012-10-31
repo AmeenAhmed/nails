@@ -16,20 +16,23 @@ chores  :
 
 
 
-1. Implement more generators
+1. Implement more generators - (scaffold)
 2. URL variables in routes (done)
 3. helpers (done)
 4. pluggable view engines
 5. plugins for other dbs 
-6. View helpers 
+6. View helpers (done)
 7. Add more functionality to the migrations (done)
-8. Add scaffolding
-9. Implement a bundler (done)
-10. Relations in models. (done)
-11. Render JSON - XML (done)
-12. Nails console (done)
-13. Logging
-
+8. Implement a bundler (done)
+9. Relations in models. (done)
+10. Render JSON - XML (done)
+11. Nails console (done)
+12. Logging
+13. Filters in controllers (done)
+14. Session (done)
+15. Flash (done)
+16. Cookies (done)
+17. Caching
 
 
 

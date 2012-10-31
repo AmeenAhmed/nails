@@ -5,35 +5,30 @@ exports.start_server = function() {
 	var Fiber = require('fibers');
 	var util = require('util');
 	var crypto = require('crypto');
-	http.createServer(function(req,res) {
+	var cookies = require('./cookies');
+	var server = http.createServer(function(req,res) {
 		Fiber(function() { 
-			cookies = {}
-			var c = req.headers.cookie.split(';');
-			for(var i=0; i<c.length; i++) {
-				var cks = c[i].split('=');
-				cookies[cks[0].trim()] = cks[1];
-			}
-
-			console.log('Cookies: ' + util.inspect(cookies));
-			//res.setHeader('Set-Cookie','user=123');
-			process.on('uncaughtException', function(err) {
-				console.log(err.message);
+			cookies.createSession(req,res);
+			var session = cookies.getSessionHash(req,res,'session');
+			
+			//process.on('uncaughtException', function(err) {
+			//	console.log(err.message);
 				
-				res.end(err.stack);
-			});
+			//	res.end(err.stack);
+			//});
 			require('module')._cache={};
 			
-			global.callbackCount = 0;
+			//global.callbackCount = 0;
 			
 			var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
 			
-			if(req.method == 'GET' || req.method == 'DELETE') {
-				console.log('Request method : ' + req.method);
+			if(req.method == 'GET') {
+				//console.log('Request method : ' + req.method);
 				var reqUrl = url.parse(req.url); 
-				var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res);
+				var response = router.route(reqUrl.pathname,req.method,reqUrl.query,req,res,session);
 				
-			} else if(req.method == 'POST' || req.method == 'PUT') {
-				console.log('Request method : ' + req.method);
+			} else if(req.method == 'POST') {
+				//console.log('Request method : ' + req.method);
 				var postData = '';
 				req.on('data',function(chunk) {
 				
@@ -42,9 +37,9 @@ exports.start_server = function() {
 	
 				req.on('end',function() {
 				
-					router.route(req.url,req.method,postData,req,res);
+					router.route(req.url,req.method,postData,req,res,session);
 				});
 			}
 		}).run();
-	}).listen(8080,'127.0.0.1');	
+	}).listen(3000);
 }

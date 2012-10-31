@@ -2,7 +2,7 @@
 // Log.js : 
 // Log helper with info, debug, error messages.
 
-function printLogTime() {
+function printLogTime(str) {
 	var date = new Date();
 	var month = prefixZero(date.getMonth());
 	var dateNum = prefixZero(date.getDate());
@@ -12,7 +12,7 @@ function printLogTime() {
 
 	return "["+ date.getFullYear()+"-"+month+"-"+dateNum+" "+
 				hours+":"+minutes+":"+seconds + "] "
-				+ "INFO  ";
+				+ str + "  ";
 }
 
 function prefixZero(num) {
@@ -23,5 +23,8 @@ function prefixZero(num) {
 }
 
 exports.info = function(message) {
-	console.log(printLogTime() + message);
+	console.log(printLogTime('INFO') + message);
+}
+exports.error = function(message) {
+	console.log(printLogTime('ERROR') + message);
 }

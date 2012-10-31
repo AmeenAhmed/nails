@@ -8,7 +8,7 @@ var dbase = require('./dbase');
 var util = require('util');
 var viewHelpers = require('./view_helpers');
 
-exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers) {
+exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers,session) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
 		res.end(exceptions.noController(controllerName+'_controller'));
 	}
@@ -23,7 +23,10 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 			this[key] = val;
 		}
 	};
-
+	var cookies = require('./cookies');
+	context.session = session;
+	context.flash = {};
+	context.cookies = cookies.getSessionHash(request,response,'cookies');
 	context.log = {
 		print : function(x) {
 			console.log(x);
@@ -43,7 +46,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 			context[bundle[i]] = require(bundle[i]);
 		}
 	} else {
-		console.log('Bundle not found. Do bundle install!');
+		//console.log('Bundle not found. Do bundle install!');
 	}
 		
 	for(var key in route_helpers) {
@@ -57,32 +60,87 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	context['$'] = {};
 
 	if(controller[controllerName][actionName]) {
+		
+		var beforeFilters = controller[controllerName]['beforeFilter'];
+		if(beforeFilters) {
+			for(var i=0; i<beforeFilters.length; i++) {
+				var bf = controller[controllerName][beforeFilters[i]].toString().replace('function ()','');
+				vm.runInNewContext(bf,context);
+			}
+		}
+		var aroundFilters = controller[controllerName]['aroundFilter'];
+		if(aroundFilters) {
+			for(var i=0; i<aroundFilters.length; i++) {
+				var arf = controller[controllerName][aroundFilters[i]].toString().replace('function ()','');
+				vm.runInNewContext(arf,context);
+			}
+		}
+		
 		var actionFunction = controller[controllerName][actionName].toString().replace('function ()','');
 		var res = vm.runInNewContext(actionFunction,context);
+		
+		var afterFilters = controller[controllerName]['afterFilter'];
+		if(aroundFilters) {
+			for(var i=0; i<aroundFilters.length; i++) {
+				var arf = controller[controllerName][aroundFilters[i]].toString().replace('function ()','');
+				vm.runInNewContext(arf,context);
+			}
+		}
+		if(afterFilters) {
+			for(var i=0; i<afterFilters.length; i++) {
+				var af = controller[controllerName][afterFilters[i]].toString().replace('function ()','');
+				vm.runInNewContext(af,context);
+			}
+		}
+		
+		var persistFlash = false;
+		cookies.setSessionHash(request,response,'session',context['session']);
+		////console.log(request.url + ' -> Writing the cookie object ' + util.inspectcontext['cookies']);
+		cookies.setSessionHash(request,response,'cookies',context['cookies']);
+		var empty = true;
+		
+		for(var key in context['flash']) {
+			empty = false;
+			break;
+		}
+		if(!empty) {
+			//console.log('Writing the flash object : ' + util.inspect(context['flash']));
+			cookies.setSessionHash(request,response,'flash',context['flash']);
+			persistFlash = true;
+		} else {
+			context['flash'] = cookies.getSessionHash(request,response,'flash');
+		}
+		
+		
 		//var res = controller[controllerName][actionName]();
 		if(res) {
 			if(res.status == 302) {
 				response.statusCode = 302;
 				response.setHeader("Location", res.response);
 				response.end();
+				return;
 			}
 			if(res.json) {
 				response.setHeader('Content-Type','text/json');
 				response.end(res.json);
+				return;
 			}
-			console.log('res : ' + util.inspect(res));
+			//console.log('res : ' + util.inspect(res));
 			if(res.xml) {
 				response.setHeader('Content-Type','text/xml');
 				response.end(res.xml);
+				return;
 			}
 		}
 	} else {
 		response.end(exceptions.unknownAction(actionName,controllerName));
+		return;
 	}
 	var viewFileName = process.cwd() +'/app/views/'+controllerName+'/'+ actionName +'.html.ejs';
 	var layoutName = process.cwd() + '/app/views/layouts/application.html.ejs';
 	
 	var viewContext = {};
+	
 	for(var key in route_helpers) {
 		viewContext[key] = route_helpers[key];
 	}
@@ -100,10 +158,17 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	for(var key in helper) {
 		viewContext[key] = helper[key];
 	}
-	console.log(util.inspect(helper))
+	//console.log(util.inspect(helper))
 	
 	viewContext['$'] = context['$'];
+	viewContext['session'] = context['session'];
+	viewContext['flash'] = context['flash'];
+	
+	cookies.setSessionHash(request,response,"flash","{}");
+	
+	//console.log(util.inspect(viewContext));
 	render(response,viewContext);
+	
 	function render(response,viewContext) {
 		
 		if(fs.existsSync(viewFileName)) {
@@ -180,54 +245,54 @@ function initModels() {
 				
 				if(this.belongsTo) {
 					if(o == this.belongsTo) {
-						console.log('Eureka got the ' + this.belongsTo + ' : ' + obj[o]);
+						//console.log('Eureka got the ' + this.belongsTo + ' : ' + obj[o]);
 						this[this.belongsTo + '_id'] = obj[o].id;
 						continue;
 					}
 				}
 				this[o] = obj[o];
 				
-				console.log('key : ' + o + ' value : ' + util.inspect(obj[o]));
+				//console.log('key : ' + o + ' value : ' + util.inspect(obj[o]));
 			}
 		}
 		if(this.belongsTo) {
-			console.log(tableName + ' belongs to ' + this.belongsTo);
+			//console.log(tableName + ' belongs to ' + this.belongsTo);
 			this[this.belongsTo] = function() {
 				var inf = require('inflection');
 				var className = inf.camelize(this.belongsTo);
-				console.log('Class Name : ' + className);
+				//console.log('Class Name : ' + className);
 				var modelClass = modelClasses[className];
-				console.log('ModelClass : ' + util.inspect(modelClass));
+				//console.log('ModelClass : ' + util.inspect(modelClass));
 				var field = this.belongsTo + '_id';
-				console.log('find() :' + util.inspect(modelClass.find(this[field])));
+				//console.log('find() :' + util.inspect(modelClass.find(this[field])));
 			}
 			
 			
 		}
 		if(this.hasMany) {
-			console.log(tableName + ' has many ' + this.hasMany);
+			//console.log(tableName + ' has many ' + this.hasMany);
 			this[this.hasMany] = function() {
-				console.log('This function will return an array of ' + this.hasMany);
+				//console.log('This function will return an array of ' + this.hasMany);
 				var inf = require('inflection');
 				var className = inf.camelize(inf.singularize(this.hasMany));
-				console.log('Class Name : ' + className);
+				//console.log('Class Name : ' + className);
 				var modelClass = modelClasses[className];
-				console.log('ModelClass : ' + util.inspect(modelClass));
-				console.log('find by() :' + util.inspect(modelClass.findBy(this.table_name + '_id',this.id)));
+				//console.log('ModelClass : ' + util.inspect(modelClass));
+				//console.log('find by() :' + util.inspect(modelClass.findBy(this.table_name + '_id',this.id)));
 				return modelClass.findBy(this.table_name + '_id',this.id);
 			}
 		}
 		
 		if(this.hasOne) {
-			console.log(tableName + ' has one ' + this.hasOne);
+			//console.log(tableName + ' has one ' + this.hasOne);
 			this[this.hasOne] = function() {
-				console.log('This function will return an array of ' + this.hasOne);
+				//console.log('This function will return an array of ' + this.hasOne);
 				var inf = require('inflection');
 				var className = inf.camelize(inf.singularize(this.hasOne));
-				console.log('Class Name : ' + className);
+				//console.log('Class Name : ' + className);
 				var modelClass = modelClasses[className];
-				console.log('ModelClass : ' + util.inspect(modelClass));
-				console.log('find by() :' + util.inspect(modelClass.findBy(this.table_name + '_id',this.id)));
+				//console.log('ModelClass : ' + util.inspect(modelClass));
+				//console.log('find by() :' + util.inspect(modelClass.findBy(this.table_name + '_id',this.id)));
 				return modelClass.findBy(this.table_name + '_id',this.id);
 			}
 		}
@@ -244,7 +309,7 @@ function initModels() {
 			
 		}
 		this.validate = function() {
-			console.log('**********************************************************************')
+			//console.log('**********************************************************************')
 			var schema = require(process.cwd() + '/db/' + this.table_name + '_schema.js').schema;
 			var bool = true;
 			var errors = [];
@@ -255,19 +320,19 @@ function initModels() {
 					var myClass = modelClasses[this.table_name];
 					if(this[this.belongsTo + '_id']) {
 						var row = myClass.findBy(this.belongsTo + '_id',this[this.belongsTo + '_id']);
-						console.log('ROW : ' + util.inspect(row));
-						console.log(row.length);
+						//console.log('ROW : ' + util.inspect(row));
+						//console.log(row.length);
 						if(row.length) {
-							console.log('validation failed : ' + this.table_name + ' for ' + this.belongsTo + ' : ' 
-								+ this[this.belongsTo + '_id']
-								+ ' already exists' );
+							//console.log('validation failed : ' + this.table_name + ' for ' + this.belongsTo + ' : ' 
+								//+ this[this.belongsTo + '_id']
+								//+ ' already exists' );
 							bool = false;
 							errors.push(this.table_name + ' for ' + this.belongsTo + ' : ' 
 								+ this[this.belongsTo + '_id']
 								+ ' already exists');
 						}
 					} else {
-						console.log('validation failed : ' + this.belongsTo + '_id required' );
+						//console.log('validation failed : ' + this.belongsTo + '_id required' );
 						bool = false;
 						errors.push(this.belongsTo + '_id required' );
 					}
@@ -276,41 +341,41 @@ function initModels() {
 			if(this.validates) {
 				
 				for(var prop in schema) {
-					console.log('Validation for ' + prop + '=> ' + util.inspect(this.validates[prop]));
+					//console.log('Validation for ' + prop + '=> ' + util.inspect(this.validates[prop]));
 					if(this.validates[prop].presence == true) {
 						if(this[prop]) {
-							console.log('validation passed!');
+							//console.log('validation passed!');
 						} else {
 							bool = false;
 							errors.push(prop + ' should not be null');
-							console.log('validation failed : ' + prop + ' should not be null');	
+							//console.log('validation failed : ' + prop + ' should not be null');	
 						}
 						
 					}
 					if(this.validates[prop].uniqueness == true) {
 						
-						console.log(prop + ' should be unique');
+						//console.log(prop + ' should be unique');
 					}
 					if(this.validates[prop].length) {
 						var min = this.validates[prop].length.minimum;
 						var max = this.validates[prop].length.maximum;
 						if(min) {
 							if(this[prop] && this[prop].length > min) {
-								console.log('validation passed!');
+								//console.log('validation passed!');
 							} else {
 								bool = false;
 								errors.push(prop + ' should be more than ' + min + ' chars');
-								console.log('validation failed :' + prop + ' should be more than ' + min + ' chars');	
+								//console.log('validation failed :' + prop + ' should be more than ' + min + ' chars');	
 							}
 							
 						}
 						if(max) {
 							if(this[prop] && this[prop].length < max) {
-								console.log('validation passed!');
+								//console.log('validation passed!');
 							} else {
 								bool = false;
 								errors.push(prop + ' should be less than ' + max + ' chars');
-								console.log('validation failed : ' + prop + ' should be less than ' + max + ' chars');	
+								//console.log('validation failed : ' + prop + ' should be less than ' + max + ' chars');	
 							}
 							
 						}
@@ -319,7 +384,7 @@ function initModels() {
 				}
 			}
 			this.errors = errors;
-			console.log('**********************************************************************')
+			//console.log('**********************************************************************')
 			
 			return bool;
 		}

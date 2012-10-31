@@ -4,7 +4,7 @@ exports.redirectTo = function(url) {
 }
 
 exports.render = function(obj) {
-	console.log('Render : ' + util.inspect(obj));
+	//console.log('Render : ' + util.inspect(obj));
 	if(obj.json) {
 		var model = obj.json;
 		return {

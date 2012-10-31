@@ -6,7 +6,7 @@ var dbase = require('./dbase');
 var helpers = require('./helpers');
 var exceptions = require('./exceptions');
 var utils = require('./utils');
-
+var util = require('util');
 function initialize(routes) {
 	var named_routes = {};
 	
@@ -46,52 +46,75 @@ function initialize(routes) {
 }
 
 
-exports.route = function(url,method,query,req,res) {
+exports.route = function(url,method,query,req,res,session) {
 	
 	var route_file = require(process.cwd() + '/config/routes.js');
 	var route_helpers = initialize(route_file.routes);
 	method = method.toLowerCase();
-	console.log('method:' + method);
+	//console.log('method:' + method);
+	log.info('[' + req.method + '] ' + req.url);
 	var params = {};
 	if(query) {
 		params = utils.queryParser(query);
+		//console.log('params : ' + util.inspect(params));
 	}
-
+	if(params['_method']) {
+		method = params['_method'];
+		//console.log('method is now ' + method);
+	}
 	if(url.match('.js')) {
 		if(fs.existsSync(process.cwd() + '/public/js' + url)) {
+			log.info('Served asset '+ process.cwd() + '/public/js' + url);
 			res.setHeader('Content-Type','text/javascript');
 			res.end(fs.readFileSync(process.cwd() + '/public/js' + url,'utf-8'));
 		} else {
 			res.statusCode = 404;
 			res.end();
 		}
-	}
-	if(url.match('.css')) {
+		return;
+	}else if(url.match('.css')) {
 		if(fs.existsSync(process.cwd() + '/public/css' + url)) {
+			log.info('Served asset '+ process.cwd() + '/public/css' + url);
 			res.setHeader('Content-Type','text/css');
 			res.end(fs.readFileSync(process.cwd() + '/public/css' + url,'utf-8'));
 		} else {
 			res.statusCode = 404;
 			res.end();
+		}
+		return;
+	} else if(url.match('.png') || url.match('.gif') || url.match('.jpg') || url.match('.jpeg')){
+		if(fs.existsSync(process.cwd() + '/public/images' + url)) {
+			log.info('Served asset '+ process.cwd() + '/public/images' + url);
+			var extension = url.split('.')[1];
+			
+			res.setHeader('Content-Type','image/' + extension);
+			res.end(fs.readFileSync(process.cwd() + '/public/images' + url));
+		} else {
+			res.statusCode = 404;
+			res.end();
 		}	
+		return;
 	}
+	
 	if(url == '/') {
 		var route = '';
 		if(route_file.routes.root) {
 			route = route_file.routes.root;
 		} else {
 			if(fs.existsSync(process.cwd() + '/public/index.html','utf-8')) {
+				log.info('Served /public/index.html');
 				res.end(fs.readFileSync(process.cwd() + '/public/index.html','utf-8'));
 			} else {
+				log.error('No route matching [' + method + '] ' + url);
 				res.end(exceptions.noRouteMatch(method,url));
 			}
 		}
 		
-		return routeRequest(route,url,method,params,req,res,route_helpers);
+		return routeRequest(route,url,method,params,req,res,route_helpers,session);
 	}
 	else if(route_file.routes[utils.removeLeadingSlash(url)]) {
 		var route = route_file.routes[utils.removeLeadingSlash(url)];
-		return routeRequest(route,url,method,params,req,res,route_helpers);
+		return routeRequest(route,url,method,params,req,res,route_helpers,session);
 	} else {
 		url = utils.removeLeadingSlash(url);
 		var c1 = url.split('/').length;
@@ -123,13 +146,13 @@ exports.route = function(url,method,query,req,res) {
 							params[key] = value;
 						}
 					}
-					console.log(params);
-					return routeRequest(routeVal,url,method,params,req,res,route_helpers);
+					//console.log(params);
+					return routeRequest(routeVal,url,method,params,req,res,route_helpers,session);
 					break;
 				}
 			}
 		}
-		
+		log.error('No route matching [' + method + '] ' + url);
 		res.end(exceptions.noRouteMatch(method,url));
 	}	
 		
@@ -139,7 +162,7 @@ exports.route = function(url,method,query,req,res) {
 
 
 
-function routeRequest(route,url,method,params,req,res,route_helpers) {
+function routeRequest(route,url,method,params,req,res,route_helpers,session) {
 	var controllerName = '';
 	var actionName = '';
 	
@@ -155,6 +178,7 @@ function routeRequest(route,url,method,params,req,res,route_helpers) {
 	} else if(route.post && method == 'post') {
 		controllerName = utils.controllerFromRoute(route.post);
 		actionName = utils.actionFromRoute(route.post);
+		console.log('Got post and contniuing...');	
 	} else if(route.put && method == 'put') {
 		controllerName = utils.controllerFromRoute(route.put);
 		actionName = utils.actionFromRoute(route.put);
@@ -165,5 +189,5 @@ function routeRequest(route,url,method,params,req,res,route_helpers) {
 	} else {
 		res.end(exceptions.noRouteMatch(method,url));
 	}
-	return dispatcher.runAndRender(controllerName,actionName,url,params,req,res,route_helpers);
+	return dispatcher.runAndRender(controllerName,actionName,url,params,req,res,route_helpers,session);
 }
