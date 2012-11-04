@@ -2,6 +2,8 @@
 // Log.js : 
 // Log helper with info, debug, error messages.
 
+var colors = require('colors');
+
 function printLogTime(str) {
 	var date = new Date();
 	var month = prefixZero(date.getMonth());
@@ -23,8 +25,8 @@ function prefixZero(num) {
 }
 
 exports.info = function(message) {
-	console.log(printLogTime('INFO') + message);
+	console.log(printLogTime('INFO').grey + message);
 }
 exports.error = function(message) {
-	console.log(printLogTime('ERROR') + message);
+	console.log(printLogTime('ERROR').red + message);
 }

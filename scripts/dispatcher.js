@@ -1,3 +1,5 @@
+
+
 var fs = require('fs');
 var ejs = require('ejs');
 var helpers = require('./helpers');
@@ -10,7 +12,8 @@ var viewHelpers = require('./view_helpers');
 
 exports.runAndRender = function(controllerName,actionName,url,params,request,response,route_helpers,session) {
 	if(!fs.existsSync(process.cwd() + '/app/controllers/' + controllerName + '_controller.js')) {
-		res.end(exceptions.noController(controllerName+'_controller'));
+		response.end(exceptions.noController(controllerName+'_controller'));
+		return;	
 	}
 
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');

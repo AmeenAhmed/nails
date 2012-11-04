@@ -4,11 +4,11 @@ exports.queryParser = function (query) {
 	var params = query.split('&');
 
 	for(var i=0;i<params.length;i++) {
-		
+		params[i] = params[i].replace(/\+/g,' ');
 		var key = params[i].split('=')[0];
 		console.log('Key = ' + key);
 		if(key.match('%5B')) {
-			console.log('params : ' + key);
+			console.log('params : ' +  params[i].split('=')[1]);
 			if(!obj[key.split('%5B')[0]]) {
 				obj[key.split('%5B')[0]] = {};
 			}
@@ -27,7 +27,16 @@ exports.addLeadingSlash = function (str) {
 	}
 	return str;
 }
-
+exports.removeTrailingSlash = function(str) {
+	var newStr = '';
+	if(str[str.length-1] == '/') {
+		for(var i=0;i<str.length-1;i++) {
+			newStr += str[i]
+		}
+		return newStr;
+	}
+	return str;
+}
 exports.removeLeadingSlash = function (str) {
 	if(str[0] == '/') {
 		return str.replace('/',''); 

@@ -1,6 +1,6 @@
 // @Author : Ameen Ahmed
 // nails.js :
-// This file is the main nails script which handles all the tasks like creation of an application and genertaing
+// This file is the main nails script which handles all the tasks like creation of an application and generating
 // stuff like controllers, models e.t.c.
 
 var fs = require('fs');
@@ -8,119 +8,135 @@ var log = require('./log');
 var dbase = require('./scripts/dbase.js');
 var util = require('util');
 var repl = require('repl');
-if(process.argv.length == 4) {
-	if(process.argv[2] == 'new') {
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3]);
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3]);
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/config');
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/config');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/db');
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/db');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public');
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/public');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/controllers' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/controllers');
-		
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/helpers' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/helpers');
-		
-		console.log('Creating file ' + process.cwd() +'/' + process.argv[3] + '/app/helpers/application_helper.js');
-		fs.writeFileSync(process.cwd() +'/' + process.argv[3] + '/app/helpers/application_helper.js',
-			'exports.application = {\n\n\n}');
-			
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/models' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/models');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/views' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts' );
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts' );
-
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts/application.html.ejs' );
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts/application.html.ejs' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/layouts/application.html.ejs','utf-8'),
-				'utf-8');
-
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/config/routes.js');
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/routes.js' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/routes.js','utf-8'),
-				'utf-8');
-
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/config/environment.js');
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/environment.js' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/environment.js','utf-8'),
-				'utf-8');
-
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/public/404.html');
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/404.html' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/404.html','utf-8'),
-				'utf-8');
+var colors = require('colors');
 
 
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/public/403.html');
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/403.html' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/403.html','utf-8'),
-				'utf-8');
 
-
-		console.log('Creating file ' + process.cwd() + '/' + process.argv[3] + '/public/index.html');
-		fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/index.html' ,
-				fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/index.html','utf-8'),
-				'utf-8');
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public/js');
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3]  +'/public/js' );
-
-		console.log('Creating directory ' + process.cwd() + '/' + process.argv[3] + '/public/css');
-		fs.mkdirSync(process.cwd() + '/' + process.argv[3]+'/public/css' );
-
-		console.log('Creating file ' + process.cwd()+'/'+process.argv[3] + '/bundle.js');
-		fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/bundle.js','exports.bundle = [\n\n];');
-	
-		console.log('Creating file ' + process.cwd()+'/'+process.argv[3] + '/nmake.js');
-		fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/nmake.js','//contents still need to be added here');
-
-	}
-
+function printCreateMessage(title,message) {
+	console.log('\t' + title.green+'\t' + message)
 }
 
-if(!fs.existsSync(process.cwd() + '/nmake.js')) {
+
+if(process.argv[2] == 'new') {
+	printCreateMessage('create', process.argv[3]);
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3]);
+
+	printCreateMessage('create', process.argv[3] + '/app' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app');
+
+	printCreateMessage('create', process.argv[3] + '/config');
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/config');
+
+	printCreateMessage('create', process.argv[3] + '/db');
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/db');
+
+	printCreateMessage('create', process.argv[3] + '/public');
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/public');
+
+	printCreateMessage('create', process.argv[3] + '/app' +'/controllers' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/controllers');
+	
+	printCreateMessage('create', process.argv[3] + '/app' +'/helpers' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/helpers');
+	
+	printCreateMessage('create', process.argv[3] + '/app/helpers/application_helper.js');
+	fs.writeFileSync(process.cwd() +'/' + process.argv[3] + '/app/helpers/application_helper.js',
+		'exports.application = {\n\n\n}');
+		
+
+	printCreateMessage('create', process.argv[3] + '/app' +'/models' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/models');
+
+	printCreateMessage('create', process.argv[3] + '/app' +'/views' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views');
+
+	printCreateMessage('create', process.argv[3] + '/app' +'/views/layouts' );
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts' );
+
+	printCreateMessage('create', process.argv[3] + '/app' +'/views/layouts/application.html.ejs' );
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts/application.html.ejs' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/layouts/application.html.ejs','utf-8'),
+			'utf-8');
+
+	printCreateMessage('create', process.argv[3] + '/config/routes.js');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/routes.js' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/routes.js','utf-8'),
+			'utf-8');
+
+	printCreateMessage('create', process.argv[3] + '/config/environment.js');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/environment.js' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/environment.js','utf-8'),
+			'utf-8');
+	
+	printCreateMessage('create', process.argv[3] + '/config/application.js');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/application.js' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/application.js','utf-8'),
+			'utf-8');
+	
+	printCreateMessage('create', process.argv[3] + '/public/404.html');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/404.html' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/404.html','utf-8'),
+			'utf-8');
+
+
+	printCreateMessage('create', process.argv[3] + '/public/403.html');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/403.html' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/403.html','utf-8'),
+			'utf-8');
+
+
+	printCreateMessage('create', process.argv[3] + '/public/index.html');
+	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/index.html' ,
+			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/index.html','utf-8'),
+			'utf-8');
+
+	printCreateMessage('create', process.argv[3] + '/public/js');
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3]  +'/public/js' );
+
+	printCreateMessage('create', process.argv[3] + '/public/css');
+	fs.mkdirSync(process.cwd() + '/' + process.argv[3]+'/public/css' );
+
+	printCreateMessage('create',process.argv[3] + '/bundle.js');
+	fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/bundle.js','exports.bundle = [\n\n];');
+
+	printCreateMessage('create',process.argv[3] + '/.nails');
+	fs.writeFileSync(process.cwd()+'/'+process.argv[3] + '/.nails','//contents still need to be added here');
+	
+	process.exit(0);
+}
+
+
+
+if(!fs.existsSync(process.cwd() + '/.nails')) {
 	console.log('Not in a nails application folder');
 	process.exit(0);
 }
-	if(process.argv[2] == 'server' || process.argv[2] == 's') {
-		var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
-		server.start_server();
-		console.log("Server starting...");
-		console.log("Nails 0.1.0 application starting in development on http://localhost:3000");
-		console.log("Ctrl-C to shutdown the server");
-		log.info("Node version : " + process.version);
 
-	}
+if(process.argv[2] == 'server' || process.argv[2] == 's') {
+	var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
+	console.log("Server starting...".grey);
+	server.start_server();
+	var config = require(process.cwd() + '/config/application.js').config;
+	var port = '' + config.server.port;
+	console.log('Nails 0.1.0 application started on '.grey+'http://localhost:'.green + port.green);
+	console.log("Ctrl-C to shutdown the server".grey);
+	log.info("Node version : ".grey + process.version.green);
+}
 
 
-if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(process.cwd() + '/nmake.js')) {
+if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(process.cwd() + '/.nails')) {
 	if(process.argv[3] == 'controller') {
-		console.log('U asked me to generate this [' + process.argv[3] + ']');
+		printCreateMessage('generate','contoller ' + process.argv[4]);
 		if(process.argv[4]) {
-			console.log('Creating the '+process.argv[4]+' controller')
+			
+			printCreateMessage('create','app/controllers/' + process.argv[4] + '_controller.js');
 			fs.writeFileSync(process.cwd() + '/app/controllers/' + process.argv[4] + '_controller.js',
 				'exports.' + process.argv[4] + ' = {\n\n\n}');
-			//routes = require(process.cwd() + '/config/routes.js');
-			//routes.routes[process.argv[4]] = process.argv[4]
-			//console.log(JSON.stringify(routes.routes));
-			console.log('Creating directory ' + 'app/views/' + process.argv[4]);
+			
+			printCreateMessage('create','app/views/' + process.argv[4]);
 			fs.mkdirSync(process.cwd() + '/app/views/' + process.argv[4]);
-			console.log('Creatung the ' + process.argv[4] + ' helper');
+			
+			printCreateMessage('create','app/helpers/' + process.argv[4] + '_helper.js');
 			fs.writeFileSync(process.cwd() + '/app/helpers/' + process.argv[4] + '_helper.js',
 				'exports.' + process.argv[4] + ' = {\n\n\n}');
 		} else {
@@ -134,8 +150,42 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 				for(var i=0;i<len;i++) {
 					params.push(process.argv[5+i]);
 				}
-				console.log(params);
-				dbase.createModel(process.argv[4],params);
+				var modelName = process.argv[4];
+				//console.log(params);
+				printCreateMessage('create','app/models/' + modelName + '.js');
+				
+	
+				fs.writeFileSync(process.cwd() + '/app/models/' + modelName + '.js','exports.'+modelName +' = {\n\n\n}');
+				
+				var timestamp = dbase.generateTimestamp();
+				printCreateMessage('create','db/migrate/' + timestamp + '_' + modelName + '.js');
+			 	
+			 	paramsObject = '{';
+			 	for(var x in params) {
+			 		var obj = params[x].split(':');
+			 		if(x!=0) {
+			 			paramsObject += ','
+			 		}
+			 		paramsObject += '\n\t\t\'' + obj[0] + '\' : \'' + obj[1] + '\'';
+			 	}
+			 	paramsObject += '\n\t}';
+			 	
+			 	fs.writeFileSync(process.cwd() + '/db/migrate/' + timestamp + '_Create' + modelName + '.js',
+			 		'exports.migrate = {\n\n\nup : function() {\n\tthis.createTable(\''+modelName+'\','+paramsObject+');\n\n},\n\n' +
+			 		'down : function() {\n\n\tthis.dropTable(\'' + modelName + '\');\n\n}\n\n}','utf-8');
+			
+			 	var tables = require(process.cwd() + '/db/tables.js').tables;
+			 	tables.push(modelName);
+			 	var tblStr = 'exports.tables = [';
+			 	for(var x in tables) {
+			 		if(x != 0) {
+			 			tblStr += ','
+			 		}
+			 		tblStr += '\n\t\'' + tables[x] + '\''; 
+			 	}
+			 	tblStr += '\n]'
+			 	fs.writeFileSync(process.cwd() + '/db/tables.js',tblStr,'utf-8');
+				//dbase.createModel(process.argv[4],params);
 			} else {
 				console.log('Generating a model needs attributes');
 			}
@@ -144,8 +194,10 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 		}
 	} else if(process.argv[3] == 'migration') {
 		if(process.argv[4]) {
-			console.log('Creating a migration [' + process.argv[4] + ']');
+			
+			
 			var timestamp = dbase.generateTimestamp();
+			printCreateMessage('create','db/migrate/' + timestamp + '_' + process.argv[4] + '.js');
 			var migration = 'exports.migrate={\nup: function() {\n},\ndown: function(){\n}\n}';
 			fs.writeFileSync(process.cwd() + '/db/migrate/' + timestamp + '_' + process.argv[4] + '.js',migration);
 		} else {
@@ -183,9 +235,14 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 }
 
 if(process.argv[2] == 'db:create') {
+	
 	var environment_file = require(process.cwd() + '/config/environment.js');
 	var dbname = environment_file.environment;
-	console.log("Creating a database in " + dbname + ' environment');
+	
+	printCreateMessage('create','db/' + dbname+'.sqilte');
+	printCreateMessage('create','db/tables.js');
+	printCreateMessage('create', 'db/migrate');
+	
 	dbase.create(dbname);
 }
 function sleep(ms) {
@@ -195,18 +252,76 @@ function sleep(ms) {
     }, ms);
     Fiber.yield();
 }
+
+function addMigrationFunctions(migration) {
+	migration.createTable = function(tableName,fields) {
+
+		console.log('\tcreate table '.grey + tableName);
+		dbase.createTable(tableName,fields);
+		console.log('\tcreate '.green + 'db/' + tableName+'_schema.js');
+		dbase.writeSchema(tableName,fields);
+	}
+	migration.dropTable = function(tableName) {
+		console.log('\tdrop table '.grey + tableName);
+		dbase.dropTable(tableName);
+		console.log('\tremove  '.red + 'db/'  +tableName + '_schema.js');
+		fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+	}
+	
+	migration.renameTable = function(oldName,newName) {
+		console.log('\trename table '.grey + oldName + ' to table '.grey + newName);
+		dbase.renameTable(oldName,newName);
+		var schema = require(process.cwd() + '/db/' + oldName + '_schema.js').schema;
+		fs.unlinkSync(process.cwd() + '/db/'  +oldName + '_schema.js');
+		console.log('\tcreate '.green + 'db/' + newName+'_schema.js');
+		dbase.writeSchema(newName,schema);
+	}
+	migration.addColumn = function(tableName,columnName,type,options) {
+		console.log('\tadd column '.grey + columnName);
+		dbase.addColumn(tableName,columnName,type,options);
+		var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+		fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+		schema[columnName] = type;
+		console.log('\tmodify '.yellow + 'db/' + tableName+'_schema.js');
+		dbase.writeSchema(tableName,schema);
+	}
+	migration.renameColumn = function(tableName,columnName,newColumnName) {
+		console.log('\trename column '.grey + columnName +' to '.grey + newColumnName);
+		var newSchema = dbase.renameColumn(tableName,columnName,newColumnName);
+		console.log('\tmodify '.yellow + 'db/' + tableName+'_schema.js');
+		fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+		dbase.writeSchema(tableName,newSchema);
+	}
+	migration.changeColumn = function(tableName,columnName,type,options) {
+		console.log('\tchange column '.grey + columnName);
+		dbase.changeColumn(tableName,columnName,type,options);
+		var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+		console.log('\tmodify '.yellow + 'db/' + tableName+'_schema.js');
+		fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+		schema[columnName] = type;
+		dbase.writeSchema(tableName,schema);
+	}
+	migration.removeColumn = function(tableName,columnName) {
+		console.log('\tremove column '.grey + columnName);
+		var newSchema = dbase.removeColumn(tableName,columnName);
+		fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
+		console.log('\tmodify '.yellow + 'db/' + tableName+'_schema.js');
+		dbase.writeSchema(tableName,newSchema);
+	}
+}
+
 if(process.argv[2] == 'db:migrate') {
 	function migrate() {
-		console.log('migrating...');
+		console.log('\tmigrating...'.blue);
 		var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
-		console.log('Found these migrations..');
-		console.log(migrations);
+		//console.log('Found these migrations..');
+		//console.log(migrations);
 		timestamps = [];
 		currentTimestamp = 0;
 		for (var file in migrations) {
 			var timestamp = migrations[file].split('_')[0];
 			var label = migrations[file].split('_')[1];
-			console.log('Label [' + label + '] with timestamp ' + timestamp);
+			//console.log('Label [' + label + '] with timestamp ' + timestamp);
 			timestamps.push(parseInt(timestamp));
 		}
 		sort_function = function(a,b) {
@@ -216,7 +331,7 @@ if(process.argv[2] == 'db:migrate') {
 		timestamps.sort(sort_function);	
 		
 		if(timestamps.length == 0) {
-			console.log('No migrations found!');
+			console.log('\tNo migrations found!'.red);
 			return;
 		}
 	    var fiber = Fiber.current;
@@ -225,7 +340,7 @@ if(process.argv[2] == 'db:migrate') {
 		});
 		var rows = Fiber.yield();
 			if(!rows) return;
-			console.log('The current timestamp is ' + rows[0]['current_timestamp']);
+			//console.log('The current timestamp is ' + rows[0]['current_timestamp']);
 			var current_timestamp = rows[0]['current_timestamp'];
 			
 			//var current_timestamp = 9999999999999999;
@@ -238,13 +353,13 @@ if(process.argv[2] == 'db:migrate') {
 			}
 	
 			if(new_timestamps.length == 0) {
-				console.log('Migrations upto date');
+				console.log('\tMigrations upto date'.green);
 				return;
 			}
-			console.log(new_timestamps);
+			//console.log(new_timestamps);
 	
 			new_timestamps.sort(sort_function);
-			console.log('the new current migration is ' + new_timestamps[new_timestamps.length-1]);
+			
 	
 			for(var t in new_timestamps) {
 				for(var m in migrations) {
@@ -252,60 +367,10 @@ if(process.argv[2] == 'db:migrate') {
 					if(migrations[m].match(new_timestamps[t])) {
 						var currentMigration = migrations[m];
 						
-							console.log('running migration ' + currentMigration);
+							console.log('\trunning migration '.green + currentMigration.yellow);
 							var migration = require(process.cwd() + '/db/migrate/' + currentMigration).migrate;
-							migration.createTable = function(tableName,fields) {
-		
-								console.log('Table : ' + tableName);
-								console.log('Fields : ' + util.inspect(fields));
-								dbase.createTable(tableName,fields);
-								dbase.writeSchema(tableName,fields);
-							}
-							migration.dropTable = function(tableName) {
-								console.log('Dropping table ' + tableName);
-								
-								dbase.dropTable(tableName);
-								
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-							}
-							
-							migration.renameTable = function(oldName,newName) {
-								console.log('Renaming table ' + oldName + ' to table ' + newName);
-								dbase.renameTable(oldName,newName);
-								var schema = require(process.cwd() + '/db/' + oldName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +oldName + '_schema.js');
-								dbase.writeSchema(newName,schema);
-							}
-							migration.addColumn = function(tableName,columnName,type,options) {
-								console.log('Adding column ' + columnName);
-								dbase.addColumn(tableName,columnName,type,options);
-								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								schema[columnName] = type;
-								dbase.writeSchema(tableName,schema);
-							}
-							migration.renameColumn = function(tableName,columnName,newColumnName) {
-								var newSchema = dbase.renameColumn(tableName,columnName,newColumnName);
-								
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								console.log('*************************************************');
-								console.log('Rename new schema : ' + util.inspect(newSchema));
-								console.log('*************************************************');
-								dbase.writeSchema(tableName,newSchema);
-							}
-							migration.changeColumn = function(tableName,columnName,type,options) {
-								dbase.changeColumn(tableName,columnName,type,options);
-								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								schema[columnName] = type;
-								dbase.writeSchema(tableName,schema);
-							}
-							migration.removeColumn = function(tableName,columnName) {
-								var newSchema = dbase.removeColumn(tableName,columnName);
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								dbase.writeSchema(tableName,newSchema);
-							}
-							console.log(util.inspect(migration));
+							addMigrationFunctions(migration);
+							//console.log(util.inspect(migration));
 							migration.up();
 						
 					}	
@@ -314,7 +379,7 @@ if(process.argv[2] == 'db:migrate') {
 				
 			}
 			var latest_timestamp = new_timestamps[new_timestamps.length-1];
-			dbase.setCurrentMigrationTimestamp(latest_timestamp);
+			dbase.setCurrentMigrationTimestamp(latest_timestamp,function(){});
 		
 	}
 	
@@ -323,16 +388,16 @@ if(process.argv[2] == 'db:migrate') {
 
 if(process.argv[2] == 'db:rollback') {
 	function rollback() {
-		console.log('migrating...');
+		console.log('\trolling back...'.blue);
 		var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
-		console.log('Found these migrations..');
-		console.log(migrations);
+		//console.log('Found these migrations..');
+		//console.log(migrations);
 		timestamps = [];
 		currentTimestamp = 0;
 		for (var file in migrations) {
 			var timestamp = migrations[file].split('_')[0];
 			var label = migrations[file].split('_')[1];
-			console.log('Label [' + label + '] with timestamp ' + timestamp);
+			//console.log('Label [' + label + '] with timestamp ' + timestamp);
 			timestamps.push(parseInt(timestamp));
 		}
 		sort_function = function(a,b) {
@@ -342,7 +407,7 @@ if(process.argv[2] == 'db:rollback') {
 		timestamps.sort(sort_function);	
 		
 		if(timestamps.length == 0) {
-			console.log('No migrations found!');
+			console.log('\tNo migrations found!'.red);
 			return;
 		}
 	    var fiber = Fiber.current;
@@ -351,87 +416,45 @@ if(process.argv[2] == 'db:rollback') {
 		});
 		var rows = Fiber.yield();
 		if(!rows) return;
-		console.log('The current timestamp is ' + rows[0]['current_timestamp']);
+		//console.log('The current timestamp is ' + rows[0]['current_timestamp']);
 		var current_timestamp = rows[0]['current_timestamp'];
+		
 		var ct = -1;
 		for(var i in timestamps) {
 			if(timestamps[i] == current_timestamp) {
 				ct = i;
 			}
 		}
-		if(ct != 0) {
+		
+		if(ct > 0) {
 			var new_timestamp = timestamps[ct-1];
-		} else {
+		} else if(ct == 0) {
 			var new_timestamp = 0;
+		} else {
+			console.log('\tNothing to rollback'.red);
+			return;
 		}
 		var currentMigration = '';
-		console.log(timestamps[ct]);
+		//console.log(timestamps[ct]);
 		for(var key in migrations) {
 			if(migrations[key].match(timestamps[ct])) {
 				currentMigration = migrations[key];
 				break;
 			}
 		}
-		console.log(currentMigration);
+		//console.log(currentMigration);
 		var migration = require(process.cwd() + '/db/migrate/' + currentMigration).migrate;
-							migration.createTable = function(tableName,fields) {
-		
-								console.log('Table : ' + tableName);
-								console.log('Fields : ' + util.inspect(fields));
-								dbase.createTable(tableName,fields);
-								dbase.writeSchema(tableName,fields);
-							}
-							migration.dropTable = function(tableName) {
-								console.log('Dropping table ' + tableName);
-								
-								dbase.dropTable(tableName);
-								
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-							}
-							
-							migration.renameTable = function(oldName,newName) {
-								console.log('Renaming table ' + oldName + ' to table ' + newName);
-								dbase.renameTable(oldName,newName);
-								var schema = require(process.cwd() + '/db/' + oldName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +oldName + '_schema.js');
-								dbase.writeSchema(newName,schema);
-							}
-							migration.addColumn = function(tableName,columnName,type,options) {
-								console.log('Adding column ' + columnName);
-								dbase.addColumn(tableName,columnName,type,options);
-								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								schema[columnName] = type;
-								dbase.writeSchema(tableName,schema);
-							}
-							migration.renameColumn = function(tableName,columnName,newColumnName) {
-								var newSchema = dbase.renameColumn(tableName,columnName,newColumnName);
-								
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								console.log('*************************************************');
-								console.log('Rename new schema : ' + util.inspect(newSchema));
-								console.log('*************************************************');
-								dbase.writeSchema(tableName,newSchema);
-							}
-							migration.changeColumn = function(tableName,columnName,type,options) {
-								dbase.changeColumn(tableName,columnName,type,options);
-								var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								schema[columnName] = type;
-								dbase.writeSchema(tableName,schema);
-							}
-							migration.removeColumn = function(tableName,columnName) {
-								var newSchema = dbase.removeColumn(tableName,columnName);
-								fs.unlinkSync(process.cwd() + '/db/'  +tableName + '_schema.js');
-								dbase.writeSchema(tableName,newSchema);
-							}
-							console.log(util.inspect(migration));
-							migration.down();
-		dbase.setCurrentMigrationTimestamp(new_timestamp);
+		addMigrationFunctions(migration);					
+		migration.down();
+		fiber = Fiber.current;
+		dbase.setCurrentMigrationTimestamp(new_timestamp,function(err) {
+			fiber.run(err);
+		});
+		var err = Fiber.yield();
 	}
 	
 	var step = 1;
-	
+	//console.log('Step = ' + process.argv[3]);
 	if(process.argv[3]) {
 		var s = process.argv[3].split('=');
 		if(s.length == 2) {

@@ -2,13 +2,26 @@ var util = require('util');
 var dbase = require('./dbase');
 exports.formTag = function(action,obj) {
 	var html = '<form action="' + action + '"';
+	var newMethod;
 	if(obj) {
 		for(var key in obj) {
+			if(key == 'method') {
+				options[key] = options[key].toUpperCase();
+				if(options[key] == 'PUT' || options[key] == 'POST' || options[key] == 'DELETE') {
+					newMethod = options[key];
+					options[key] = 'POST';
+					
+				}
+				 
+
+			}
+			
 			html += ' ' + key + '="' + obj[key] + '"';
 		}
 	}
 	html += ' >\n';
-	html += '<input type="hidden" name="_method" value="delete"/>\n';
+	html+= '<input type="hidden" name="_method" value="' + newMethod + '"/>';
+	
 	return html;
 }
 
@@ -243,12 +256,24 @@ function formBuilderObject(model,mName) {
 exports.formFor = function(model,mName,options,cb) {
 	var html = '';
 	html += '<form';
+	var newMethod;
 	if(options) {
 		for(var key in options) {
+			if(key == 'method') {
+				options[key] = options[key].toUpperCase();
+				if(options[key] == 'PUT' || options[key] == 'POST' || options[key] == 'DELETE') {
+					newMethod = options[key];
+					options[key] = 'POST';
+					
+				}
+				 
+
+			}
 			html += ' ' + key + '="' + options[key] + '"';
 		}
 	}
 	html+= '>\n';
+	html+= '<input type="hidden" name="_method" value="' + newMethod + '"/>';
 	var f = formBuilderObject(model,mName);
 	cb(f);
 	//console.log(util.inspect(f))

@@ -2,12 +2,13 @@ var sqlite = require('sqlite3').verbose();
 var fs = require('fs');
 var util = require('util');
 var Fiber = require('fibers');
+var colors = require('colors');
 
 exports.create = function(name) {
-	console.log('Creating the file at ' + process.cwd() + '/db/tables.js');
+	
 	fs.writeFileSync(process.cwd() + '/db/tables.js','exports.tables = [\n\n\n]','utf-8');
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite');
-	console.log('Creating the folder ' + process.cwd() + '/db/migrate');
+	
 	if(!fs.existsSync(process.cwd() + '/db/migrate'))
 		fs.mkdirSync(process.cwd() + '/db/migrate');
 
@@ -22,9 +23,16 @@ exports.create = function(name) {
 	db.close();
 }
 exports.getSchema = function(mName) {
-	var schema = require(process.cwd() + '/db/' + mName + '_schema.js').schema;
-	return schema;
+	if(fs.existsSync(process.cwd() + '/db/' + mName + '_schema.js')) {
+		var schema = require(process.cwd() + '/db/' + mName + '_schema.js').schema;
+		return schema;	
+	} else {
+		console.log('\tError : '.red + 'can\'t find table ' + mName);
+		process.exit(0);
+	}
+	
 }
+var getSchema = exports.getSchema;
 exports.getCurrentMigrationTimestamp = function(cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
@@ -43,12 +51,13 @@ exports.getRowsFromTable = function(tableName,cb) {
 	db.close();
 }
 
-exports.setCurrentMigrationTimestamp = function(ts) {
+exports.setCurrentMigrationTimestamp = function(ts,cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
 
-	db.run('DELETE FROM migration;',function() {
+	db.run('DELETE FROM migration;',function(err) {
 		db.run('INSERT INTO migration VALUES (?);',ts);
+		cb(err);
 	});
 
 }
@@ -73,7 +82,7 @@ function generateTimestamp() {
 exports.generateTimestamp = generateTimestamp;
 
 exports.writeSchema = function(tableName,params) {
-	console.log('Creating the file ' + process.cwd() + '/db/' + tableName+'_schema.js');
+	
 	var str = 'exports.schema = {\n\n';
 	var start = false;
 	for(var key in params) {
@@ -87,9 +96,7 @@ exports.writeSchema = function(tableName,params) {
 	str += '\n\n}';
     
 	fs.writeFileSync(process.cwd() + '/db/' + tableName+'_schema.js',str,'utf-8');
-	//console.log('****************************************************************');
-	//console.log('STR : ' + str);
-	//console.log('****************************************************************');
+	
 }
 exports.createModel = function(modelName,params) {
 	console.log('Creating the model file at ' + process.cwd() + '/app/models/' + modelName + '.js');
@@ -140,30 +147,39 @@ exports.createTable = function(tableName,tableFields) {
 		}
 	}
 	var sql = 'CREATE TABLE ' + tableName +' (' + fields + ');';
-	//console.log('issuing sql statement ' + sql);
+	console.log('\tissuing sql statement '.grey + sql);
 
 	
 	var r = runQuery(sql);
 	if(r) {
-		console.log("Create Table error : " + r);	
+		console.log("\tCreate Table error : ".red + r);	
 	} else {
-		console.log('Create table successfull!');
+		console.log('\tCreate Table successfull'.green);
 	}
 }
 
 exports.dropTable = function(tableName) {
 	
 	var sql = 'DROP TABLE ' + tableName + ';';
-	//console.log('issuing sql statement ' + sql);
+	console.log('\tissuing sql statement '.grey + sql);
 	
-	runQuery(sql);
+	var r = runQuery(sql);
+	if(r) {
+		console.log("\tDrop Table error : ".red + r);	
+	} else {
+		console.log('\tDrop Table successfull'.green);
+	}
 }
 
 exports.renameTable = function(oldName,newName) {
 	var sql = 'ALTER TABLE ' + oldName + ' RENAME TO ' + newName + ';';
-	//console.log('issuing sql statement ' + sql);
-	runQuery(sql);
-
+	console.log('\tissuing sql statement '.grey + sql);
+	var r = runQuery(sql);
+	if(r) {
+		console.log("\tRename Table error : ".red + r);	
+	} else {
+		console.log('\tRename table successfull'.green);
+	}
 }
 exports.addColumn = function(tableName,columnName,type,options) {
 	var sqlType = '';
@@ -175,20 +191,25 @@ exports.addColumn = function(tableName,columnName,type,options) {
 		sqlType = 'REAL';
 	}
 	var sql = 'ALTER TABLE ' + tableName + ' ADD COLUMN ' + columnName + ' ' + sqlType + ';';
-	//console.log('issuing sql statement ' + sql);
+	console.log('\tissuing sql statement '.grey + sql);
 
-	runQuery(sql);
-
+	var r = runQuery(sql);
+	if(r) {
+		console.log("\tAdd Column error : ".red + r);	
+	} else {
+		console.log('\tAdd Column successfull'.green);
+	}
 }
 exports.renameColumn = function(tableName,columnName,newColumnName) {
 
-	
+	var schema = getSchema(tableName);
 	var sql = 'ALTER TABLE ' + tableName + ' RENAME TO ' + tableName + '_temp;';
 	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 	
- 	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+ 	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+ 	
 	//console.log('Old schema : ' + util.inspect(schema));
 	var new_schema = {};
 	
@@ -243,8 +264,11 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 	return new_schema;
 }
 exports.changeColumn = function(tableName,columnName,type,options) {
+	var schema = getSchema(tableName);
+	
 	this.renameTable(tableName,'temp_' + tableName);
-	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	
 	//console.log('Schema in change column : ' + util.inspect(schema));
 	var new_schema = schema;
 	new_schema[columnName] = type;
@@ -272,8 +296,11 @@ exports.changeColumn = function(tableName,columnName,type,options) {
 	
 }
 exports.removeColumn = function(tableName,columnName) {
+	
+	var schema = getSchema(tableName);
 	this.renameTable(tableName,'temp_' + tableName);
-	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	
 	var new_schema = {};
 	
 	for(var key in schema) {
@@ -374,8 +401,8 @@ function getDbName() {
 }
 
 exports.saveRecord = function(tableName,model) {
-	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-
+	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	var schema = getSchema(tableName);
 	var vals = '';
 	var attribs = '';
 	var i = 0 ;
@@ -430,8 +457,8 @@ exports.deleteRecord = function(tableName,model) {
 }
 exports.updateRecord = function(tableName,model) {
 
-	var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
-	
+	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	var schema = getSchema(tableName);
 	var query = ' ';
 	var i = 0 ;
 
