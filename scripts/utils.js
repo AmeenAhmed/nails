@@ -13,9 +13,9 @@ exports.queryParser = function (query) {
 	for(var i=0;i<params.length;i++) {
 		params[i] = params[i].replace(/\+/g,' ');
 		var key = params[i].split('=')[0];
-		console.log('Key = ' + key);
+		
 		if(key.match('%5B')) {
-			console.log('params : ' +  params[i].split('=')[1]);
+		
 			if(!obj[key.split('%5B')[0]]) {
 				obj[key.split('%5B')[0]] = {};
 			}
@@ -28,6 +28,7 @@ exports.queryParser = function (query) {
 	
 	return obj;
 }
+
 // function	: 	addLeadingSlash
 // desc		: 	adds a leading slash to the string
 

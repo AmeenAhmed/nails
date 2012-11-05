@@ -543,7 +543,7 @@ exports.saveRecord = function(tableName,model) {
 	var end = Date.now();
 	var diff = end-start;
 	if(!err) {
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 	}
 	console.log('===========================================================================');
 	return err;
@@ -564,7 +564,7 @@ exports.all = function(tableName) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('rows -> '.grey + util.inspect(rows));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows; 
 	}
@@ -586,7 +586,7 @@ exports.where = function(tableName,obj) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('rows -> '.grey + util.inspect(rows));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows;
 	}
@@ -608,7 +608,7 @@ exports.deleteRowsWithId = function(tableName,id) {
 	var end = Date.now();
 	var diff = end-start;
 	if(!err) {
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 	}
 	console.log('===========================================================================');
 	return err;
@@ -628,7 +628,7 @@ exports.deleteAll = function(tableName) {
 	var end = Date.now();
 	var diff = end-start;
 	if(!err) {
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 	}
 	console.log('===========================================================================');
 	return err;
@@ -652,7 +652,7 @@ exports.findRowsWithId = function(tableName,id) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('rows -> '.grey + util.inspect(rows));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows;
 	}
@@ -679,7 +679,7 @@ exports.findRowsWithProp = function(tableName,key,value) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('rows -> '.grey + util.inspect(rows));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows;
 	}
@@ -696,7 +696,7 @@ exports.findFirstRow = function(tableName) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('row -> '.grey + util.inspect(row));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows;
 	}
@@ -713,7 +713,7 @@ exports.findLastRow = function(tableName) {
 		var end = Date.now();
 		var diff = end - start;
 		console.log('row -> '.grey + util.inspect(row));
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 		console.log('===========================================================================');
 		return rows;
 	}
@@ -754,7 +754,7 @@ exports.updateRecord = function(tableName,model) {
 	var end = Date.now();
 	var diff = end-start;
 	if(!err) {
-		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		log.info('Success '.green + 'the query took '.grey + diff + ' MS');
 	}
 	console.log('===========================================================================');
 	return err;

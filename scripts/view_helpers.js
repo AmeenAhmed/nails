@@ -1,3 +1,8 @@
+// @Author : Ameen Ahmed
+// server.js :
+// This file containes the view helpers which are called from the view. the functions just return
+// HTML so the code is not so complicated. Just take look.
+
 var util = require('util');
 var dbase = require('./dbase');
 exports.formTag = function(action,obj) {
