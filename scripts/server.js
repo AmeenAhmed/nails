@@ -14,11 +14,18 @@ exports.start_server = function() {
 	var util = require('util');
 	var crypto = require('crypto');
 	var cookies = require('./cookies');
+	var log = require('./../log');
+
 	// loading configs from the application.js file
 	var config = require(process.cwd() + '/config/application.js').config;
 	// port number to be used to start the server
 	var port = config.server.port;
 	
+	process.on('uncaughtException', function(err) {
+		log.error(err.message);
+					
+		res.end(err.stack);
+	});
 	// creating the server and listening to the port
 	var server = http.createServer(function(req,res) {
 		try {
@@ -31,11 +38,7 @@ exports.start_server = function() {
 				
 				// catches the exception and prints to the log and returns the stack trace
 				// back to the browser 
-				process.on('uncaughtException', function(err) {
-					log.error(err.message);
-					
-					res.end(err.stack);
-				});
+				
 				
 				//clear the cache when a request is served. required for the hot swapping of code
 				require('module')._cache={};

@@ -1,3 +1,10 @@
+// @Author : Ameen Ahmed
+// utils.js :
+// This file contains some utility functions
+
+// function	: 	queryParser
+// desc		: 	accepts a query string and creates an object from it and returns
+  	
 exports.queryParser = function (query) {
 	var obj = {};
 
@@ -21,12 +28,18 @@ exports.queryParser = function (query) {
 	
 	return obj;
 }
+// function	: 	addLeadingSlash
+// desc		: 	adds a leading slash to the string
+
 exports.addLeadingSlash = function (str) {
 	if(str[0] != '/') {
 		return '/' + str;
 	}
 	return str;
 }
+// function	: 	removeTrailingSlash
+// desc		: 	removes a trailing slash from the string
+
 exports.removeTrailingSlash = function(str) {
 	var newStr = '';
 	if(str[str.length-1] == '/') {
@@ -37,6 +50,10 @@ exports.removeTrailingSlash = function(str) {
 	}
 	return str;
 }
+
+// function	: 	removeLeadingSlash
+// desc		: 	removes a trailing slash from the string
+
 exports.removeLeadingSlash = function (str) {
 	if(str[0] == '/') {
 		return str.replace('/',''); 
@@ -44,15 +61,24 @@ exports.removeLeadingSlash = function (str) {
 	return str;
 }
 
+// function	: 	controllerFromRoute
+// desc		: 	splits a route and gives back the controller. eg: home#index => home
+
 exports.controllerFromRoute = function (r) {
 	var tokens = r.split('#');
 	return tokens[0];
 }
 
+// function	: 	actionFromRoute
+// desc		: 	splits a route and gives back the action. eg: home#index => index
+
 exports.actionFromRoute = function (r) {
 	var tokens = r.split('#');
 	return tokens[1];
 }
+
+// function : 	createRouteHelper
+// desc		: 	creates and returns a function which returns the string "path"
 
 exports.createRouteHelper = function (path) {
 	return function() { return path };

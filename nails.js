@@ -314,14 +314,11 @@ if(process.argv[2] == 'db:migrate') {
 	function migrate() {
 		console.log('\tmigrating...'.blue);
 		var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
-		//console.log('Found these migrations..');
-		//console.log(migrations);
 		timestamps = [];
 		currentTimestamp = 0;
 		for (var file in migrations) {
 			var timestamp = migrations[file].split('_')[0];
 			var label = migrations[file].split('_')[1];
-			//console.log('Label [' + label + '] with timestamp ' + timestamp);
 			timestamps.push(parseInt(timestamp));
 		}
 		sort_function = function(a,b) {
@@ -340,10 +337,8 @@ if(process.argv[2] == 'db:migrate') {
 		});
 		var rows = Fiber.yield();
 			if(!rows) return;
-			//console.log('The current timestamp is ' + rows[0]['current_timestamp']);
 			var current_timestamp = rows[0]['current_timestamp'];
 			
-			//var current_timestamp = 9999999999999999;
 			var new_timestamps = [];
 			for(var t in timestamps) {
 				
@@ -356,7 +351,6 @@ if(process.argv[2] == 'db:migrate') {
 				console.log('\tMigrations upto date'.green);
 				return;
 			}
-			//console.log(new_timestamps);
 	
 			new_timestamps.sort(sort_function);
 			
@@ -370,7 +364,6 @@ if(process.argv[2] == 'db:migrate') {
 							console.log('\trunning migration '.green + currentMigration.yellow);
 							var migration = require(process.cwd() + '/db/migrate/' + currentMigration).migrate;
 							addMigrationFunctions(migration);
-							//console.log(util.inspect(migration));
 							migration.up();
 						
 					}	
@@ -390,14 +383,12 @@ if(process.argv[2] == 'db:rollback') {
 	function rollback() {
 		console.log('\trolling back...'.blue);
 		var migrations = fs.readdirSync(process.cwd() + '/db/migrate/');
-		//console.log('Found these migrations..');
-		//console.log(migrations);
+
 		timestamps = [];
 		currentTimestamp = 0;
 		for (var file in migrations) {
 			var timestamp = migrations[file].split('_')[0];
 			var label = migrations[file].split('_')[1];
-			//console.log('Label [' + label + '] with timestamp ' + timestamp);
 			timestamps.push(parseInt(timestamp));
 		}
 		sort_function = function(a,b) {
@@ -416,7 +407,6 @@ if(process.argv[2] == 'db:rollback') {
 		});
 		var rows = Fiber.yield();
 		if(!rows) return;
-		//console.log('The current timestamp is ' + rows[0]['current_timestamp']);
 		var current_timestamp = rows[0]['current_timestamp'];
 		
 		var ct = -1;
@@ -435,14 +425,12 @@ if(process.argv[2] == 'db:rollback') {
 			return;
 		}
 		var currentMigration = '';
-		//console.log(timestamps[ct]);
 		for(var key in migrations) {
 			if(migrations[key].match(timestamps[ct])) {
 				currentMigration = migrations[key];
 				break;
 			}
 		}
-		//console.log(currentMigration);
 		var migration = require(process.cwd() + '/db/migrate/' + currentMigration).migrate;
 		addMigrationFunctions(migration);					
 		migration.down();
@@ -454,7 +442,7 @@ if(process.argv[2] == 'db:rollback') {
 	}
 	
 	var step = 1;
-	//console.log('Step = ' + process.argv[3]);
+
 	if(process.argv[3]) {
 		var s = process.argv[3].split('=');
 		if(s.length == 2) {

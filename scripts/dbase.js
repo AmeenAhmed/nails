@@ -1,8 +1,19 @@
+// @Author : Ameen Ahmed
+// dbase.js :
+// This file contains the code for accessing the db by the models
+
 var sqlite = require('sqlite3').verbose();
 var fs = require('fs');
 var util = require('util');
 var Fiber = require('fibers');
 var colors = require('colors');
+var log = require('./../log');
+
+// function	: 	create
+// args		: 	the name of the db to create
+// returns	: 	nothing
+// desc		: 	called from the command $ nails db:create to create the db
+
 
 exports.create = function(name) {
 	
@@ -22,6 +33,12 @@ exports.create = function(name) {
 	
 	db.close();
 }
+
+// function	: 	getSchema
+// args 	: 	mName => tableName
+// returns	: 	the schema object
+// desc		: 	utility function to get the schema of a table
+
 exports.getSchema = function(mName) {
 	if(fs.existsSync(process.cwd() + '/db/' + mName + '_schema.js')) {
 		var schema = require(process.cwd() + '/db/' + mName + '_schema.js').schema;
@@ -33,6 +50,11 @@ exports.getSchema = function(mName) {
 	
 }
 var getSchema = exports.getSchema;
+
+// function : 	getCurrentMigrationTimestamp
+// args		: 	cb => callback t
+// returns	: 	the current migration timestamp
+// desc		: 	queries the db and returns the current migration timestamp which is stored in a special table
 exports.getCurrentMigrationTimestamp = function(cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
@@ -42,15 +64,10 @@ exports.getCurrentMigrationTimestamp = function(cb) {
 	db.close();
 }
 
-exports.getRowsFromTable = function(tableName,cb) {
-	var name = 'development';
-	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
-	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
-		cb(rows);
-	});
-	db.close();
-}
-
+// function	: 	setCurrentMigrationTimestamp
+// args		: 	ts => the timestamp to store in the db
+// returns 	: 	nothing
+// desc 	: 	updates the current migration timestamp in the db
 exports.setCurrentMigrationTimestamp = function(ts,cb) {
 	var name = 'development';
 	var db = new sqlite.Database(process.cwd() + '/db/' + name + '.sqlite','OPEN_READWRITE');
@@ -61,6 +78,8 @@ exports.setCurrentMigrationTimestamp = function(ts,cb) {
 	});
 
 }
+// function	: 	prefixZero
+// desc 	: 	util function to prefix zero to a number if less than 10 used by generateTimestamp
 
 function prefixZero(num) {
 	if(num < 10) {
@@ -68,6 +87,11 @@ function prefixZero(num) {
 	}
 	return num;
 }
+
+// function	: 	generateTimestamp
+// args 	: 	nothing
+// returns 	: 	a timestamp string from the current time
+// desc		: 	util function to generate a timestamp string from the current time
 function generateTimestamp() {
 	var date = new Date();
 	var month = prefixZero(date.getMonth());
@@ -75,12 +99,16 @@ function generateTimestamp() {
 	var hours = prefixZero(date.getHours());
 	var minutes = prefixZero(date.getMinutes());
 	var seconds = prefixZero(date.getSeconds());
-	//var milliseconds = prefixZero(date.getMilliseconds());
 
 	return date.getYear() + month + dateNum + hours + minutes + seconds;
 }
 exports.generateTimestamp = generateTimestamp;
 
+// function	: 	writeSchema
+// args		: 	tableName => the name of the table for which the schema is to be created
+//				params => the fields in the table
+// returns 	: 	nothing
+// desc		: 	creates a schema file with the name of the table under db/
 exports.writeSchema = function(tableName,params) {
 	
 	var str = 'exports.schema = {\n\n';
@@ -98,6 +126,12 @@ exports.writeSchema = function(tableName,params) {
 	fs.writeFileSync(process.cwd() + '/db/' + tableName+'_schema.js',str,'utf-8');
 	
 }
+
+// function : 	createModel
+// args		: 	modelName => the name of the model
+//				params => fields in the table related to the model
+// returns 	: 	nothing
+// desc		: 	called by the command $ nails generate model <modelname> < field [field] ... > 
 exports.createModel = function(modelName,params) {
 	console.log('Creating the model file at ' + process.cwd() + '/app/models/' + modelName + '.js');
 	
@@ -114,7 +148,7 @@ exports.createModel = function(modelName,params) {
  		paramsObject += '\n\t\t\'' + obj[0] + '\' : \'' + obj[1] + '\'';
  	}
  	paramsObject += '\n\t}';
- 	//fs.mkdirSync(process.cwd() + '/db/migrate');
+ 	
  	fs.writeFileSync(process.cwd() + '/db/migrate/' + timestamp + '_Create' + modelName + '.js',
  		'exports.migrate = {\n\n\nup : function() {\n\tthis.createTable(\''+modelName+'\','+paramsObject+');\n\n},\n\n' +
  		'down : function() {\n\n\tthis.dropTable(\'' + modelName + '\');\n\n}\n\n}','utf-8');
@@ -132,9 +166,14 @@ exports.createModel = function(modelName,params) {
  	fs.writeFileSync(process.cwd() + '/db/tables.js',tblStr,'utf-8');	
  }
 
+// function	: 	createTable
+// args		: 	tableName => the name of the table
+//				tableFields => the fields to be created in the table
+// returns	: 	nothing
+// desc		: 	to be called from the migration to create a table
 
 exports.createTable = function(tableName,tableFields) {
-	//console.log('creating table ' + tableName + 'with ' + util.inspect(tableFields));
+
 	var fields = 'id INTEGER PRIMARY KEY ASC AUTOINCREMENT';
 	for(var f in tableFields) {
 		fields += ', ' + f + ' ';
@@ -158,6 +197,11 @@ exports.createTable = function(tableName,tableFields) {
 	}
 }
 
+// function	: 	dropTable
+// args		: 	tableName => the name of the table
+// returns	: 	nothing
+// desc		: 	to be called from the migration to drop a table
+
 exports.dropTable = function(tableName) {
 	
 	var sql = 'DROP TABLE ' + tableName + ';';
@@ -171,6 +215,12 @@ exports.dropTable = function(tableName) {
 	}
 }
 
+// function	: 	renameTable
+// args		: 	oldName => the old name of the table
+//				newName => the new name of the table
+// returns	: 	nothing
+// desc		: 	to be called from the migration to rename a table
+
 exports.renameTable = function(oldName,newName) {
 	var sql = 'ALTER TABLE ' + oldName + ' RENAME TO ' + newName + ';';
 	console.log('\tissuing sql statement '.grey + sql);
@@ -181,6 +231,15 @@ exports.renameTable = function(oldName,newName) {
 		console.log('\tRename table successfull'.green);
 	}
 }
+
+// function	: 	addColumn
+// args		: 	tableName => the name of the table
+//				columnName => the name of the column to be added
+//				type => the column data type
+//				options => righ now, nothing, {}
+// returns	: 	nothing
+// desc		: 	to be called from the migration to add a column to the specified table
+
 exports.addColumn = function(tableName,columnName,type,options) {
 	var sqlType = '';
 	if(type == 'string') {
@@ -200,17 +259,21 @@ exports.addColumn = function(tableName,columnName,type,options) {
 		console.log('\tAdd Column successfull'.green);
 	}
 }
+
+// function	: 	renameColumn
+// args		: 	tableName => the name of the table
+//				columnName => the name of the column whose values are to be changed
+//				newColumnName => the new column name
+// returns	: 	nothing
+// desc		: 	to be called from the migration to rename a column name
+
 exports.renameColumn = function(tableName,columnName,newColumnName) {
 
 	var schema = getSchema(tableName);
 	var sql = 'ALTER TABLE ' + tableName + ' RENAME TO ' + tableName + '_temp;';
-	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 	
- 	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
- 	
-	//console.log('Old schema : ' + util.inspect(schema));
 	var new_schema = {};
 	
 	for(var key in schema) {
@@ -234,7 +297,6 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 		}
 	}
 	sql = 'CREATE TABLE ' + tableName +' (' + fields + ');';
-	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 		 	
@@ -258,18 +320,24 @@ exports.renameColumn = function(tableName,columnName,newColumnName) {
 	runQuery(sql);
 	
 	var sql = 'DROP TABLE ' + tableName + '_temp;';
-	//console.log('issuing sql statement ' + sql);
 	
 	runQuery(sql);
 	return new_schema;
 }
+
+// function	: 	changeColumn
+// args		: 	tableName => the name of the table
+//				columnName => the name of the column to be added
+//				type => the column data type
+//				options => righ now, nothing, {}
+// returns	: 	nothing
+// desc		: 	to be called from the migration to change a column's type
+
 exports.changeColumn = function(tableName,columnName,type,options) {
 	var schema = getSchema(tableName);
 	
 	this.renameTable(tableName,'temp_' + tableName);
-	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
 	
-	//console.log('Schema in change column : ' + util.inspect(schema));
 	var new_schema = schema;
 	new_schema[columnName] = type;
 	
@@ -295,11 +363,17 @@ exports.changeColumn = function(tableName,columnName,type,options) {
 	 
 	
 }
+
+// function	: 	removeColumn
+// args		: 	tableName => the name of the table
+//				columnName => the name of the column to be added
+// returns	: 	nothing
+// desc		: 	to be called from the migration to remove a column from the table
+
 exports.removeColumn = function(tableName,columnName) {
 	
 	var schema = getSchema(tableName);
 	this.renameTable(tableName,'temp_' + tableName);
-	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
 	
 	var new_schema = {};
 	
@@ -331,9 +405,16 @@ exports.removeColumn = function(tableName,columnName) {
 	 
 	return new_schema;
 }
+
+// function	: 	runQuery
+// args		: 	sql => the sql string to execute
+// returns 	: 	an error if any
+// desc		: 	util function to run a query
+
 function runQuery(sql) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
 	var fiber = Fiber.current;
+	console.log('executing sql => '.grey + sql);
 	db.run(sql, function(err) {
 	 	
 	 	fiber.run(err);
@@ -342,37 +423,55 @@ function runQuery(sql) {
 	db.close();	
 	return r;
 }
-function runQueryGetAll(tableName,point,cb) {
+
+// function	: 	runQueryGetAll
+// args		: 	tableName => The name of the table on which querying is done
+//				point => first | last | null 
+//				first -> the first row is returned
+//				last -> the last row is returned
+//				null -> all the rows are returned
+// returns 	: 	row(s)
+// desc		: 	util function to run a query a return rows
+
+function runQueryGetAll(tableName,point) {
 
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
 	
 	var fiber = Fiber.current;
-	db.all('SELECT * FROM ' + tableName + ';',function(err,rows) {
+	var sql = 'SELECT * FROM ' + tableName + ';';
+	console.log('executing sql => '.grey + sql);
+	db.all(sql,function(err,rows) {
+		
+		if(err) {
+			log.error(err);
+			fiber.run(null);
+		}
 	 	if(point) {
 	 		if(point == 'first') {
-	 			//cb(rows[0],tableName);
-	 			fiber.run(rows[0])
-	 			
+	 			fiber.run(rows[0]);
 	 		} else if(point == 'last') {
-	 			//cb(rows[rows.length-1],tableName);
 	 			fiber.run(rows[rows.length-1]);
-
 	 		}
 	 	} else {
-	 		//cb(rows,tableName);
 	 		fiber.run(rows);	
 	 	}
 	 	
 	});
 	var r = Fiber.yield();
+	
 	db.close();
 	return r;
 }
 
+// function	: 	runQueryGetWhere
+// args		: 	tableName => The name of the table on which querying is done
+//				obj => the object which contains field names and values to query the db
+// returns 	: 	rows
+// desc		: 	util function to run a query a return rows with a where clause
 
-function runQueryGetWhere(tableName,obj,cb) {
+function runQueryGetWhere(tableName,obj) {
 	var db = new sqlite.Database(process.cwd() + '/db/' + getDbName() + '.sqlite','OPEN_READWRITE');
-	//console.log(obj);
+	
 	var where = ' WHERE';
 	var i=0;
 	for(var o in obj) {
@@ -384,9 +483,15 @@ function runQueryGetWhere(tableName,obj,cb) {
 		i++;
 	}
 	var fiber = Fiber.current;
-	//console.log('SELECT * FROM ' + tableName + where + ';');
+	var sql = 'SELECT * FROM ' + tableName + where + ';';
+	console.log('executing sql => '.grey + sql);
 	db.all('SELECT * FROM ' + tableName + where + ';',function(err,rows) {
-	 	//cb(rows,tableName);
+	 	
+	 	if(err) {
+	 		log.error(err);
+	 		fiber.run(null);
+	 	}
+	 	
 	 	fiber.run(rows);
 	 	
 	});
@@ -395,16 +500,29 @@ function runQueryGetWhere(tableName,obj,cb) {
 	return r;
 }
 
+// function	: 	getDbName
+// desc		: 	util function to return the db name
 function getDbName() {
 	//TODO : Hardcoded to development now. Implement method to find the current environment
 	return "development";
 }
 
+// Model methods
+
+// function	: 	saveRecord
+// args		: 	tableName => name of the table
+//				model => the instance of the model to get the values of the fields
+// returns	: 	the error object if any or null
+// desc		: 	called from save method of the model instance
+
 exports.saveRecord = function(tableName,model) {
-	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+	console.log('===========================================================================');
+	log.info('Saving a row to the table ' + tableName);
+	console.log('===========================================================================');
 	var schema = getSchema(tableName);
 	var vals = '';
 	var attribs = '';
+	row = {};
 	var i = 0 ;
 
 	for(var prop in schema) {
@@ -415,49 +533,206 @@ exports.saveRecord = function(tableName,model) {
 		} 
 		if(schema[prop] == 'string') t='\'';
 		attribs += prop;
+		row[prop] = model[prop];
 		vals += t + model[prop] + t;
 		i++;
 	}
-	runQuery('INSERT INTO ' + tableName + '('+ attribs +')' + ' VALUES (' + vals + ');');
+	console.log('row -> '.grey + util.inspect(row));
+	var start = Date.now();
+	var err = runQuery('INSERT INTO ' + tableName + '('+ attribs +')' + ' VALUES (' + vals + ');');
+	var end = Date.now();
+	var diff = end-start;
+	if(!err) {
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+	}
+	console.log('===========================================================================');
+	return err;
 }
 
+// function	: 	all
+// args		: 	tableName => the name of the table
+// returns 	: 	an array of the all the rows in the table
+// desc		: 	called from the model class all method
+
 exports.all = function(tableName) {
-	
-	return runQueryGetAll(tableName,null);
+	console.log('===========================================================================');
+	log.info('Retrieving all the rows from the table ' + tableName);
+	console.log('===========================================================================');
+	var start = Date.now();
+	var rows = runQueryGetAll(tableName,null);
+	if(rows) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('rows -> '.grey + util.inspect(rows));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows; 
+	}
+	return null;
 }
+
+// function	: 	where
+// args		: 	tableName => the name of the table
+// 				obj => the fields and their values to be searched in the table
+// returns	: 	the resultant array of rows
+// desc		: 	called from the where method in the model class
+
 exports.where = function(tableName,obj) {
-	return runQueryGetWhere(tableName,obj);
+	console.log('===========================================================================');
+	log.info('Retrieving all the rows from the table' + tableName + ' where ' + util.inspect(obj));
+	console.log('===========================================================================');
+	var rows = runQueryGetWhere(tableName,obj);
+	if(rows) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('rows -> '.grey + util.inspect(rows));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows;
+	}
+	return null;
 }
+
+// function	: 	deleteRowsWithId
+// args		: 	tableName => the name of the table
+//				id => the id field's value of the row which is to be deleted
+// returns	: 	error object if any or null
+// desc		: 	called from delete method in model instance
+ 
 exports.deleteRowsWithId = function(tableName,id) {
-	runQuery('DELETE FROM ' + tableName + ' WHERE id = ' + id + ';');
+	console.log('===========================================================================');
+	log.info('delete row with id ' + id + ' from the table ' + tableName);
+	console.log('===========================================================================');
+	var start = Date.now();
+	var err =  runQuery('DELETE FROM ' + tableName + ' WHERE id = ' + id + ';');
+	var end = Date.now();
+	var diff = end-start;
+	if(!err) {
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+	}
+	console.log('===========================================================================');
+	return err;
 }
+
+// function	: 	deleteAll
+// args		: tableName => the name of the table
+// returns	: error if an or null
+// desc		: called from the deleteAll method in the model class
+
 exports.deleteAll = function(tableName) {
-	runQuery('DELETE FROM ' + tableName);
+	console.log('===========================================================================');
+	log.info('deleting all the rows from the table ' + tableName);
+	console.log('===========================================================================');
+	var start = Date.now();
+	var err = runQuery('DELETE FROM ' + tableName);
+	var end = Date.now();
+	var diff = end-start;
+	if(!err) {
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+	}
+	console.log('===========================================================================');
+	return err;
 }
+
+// function	: 	findRowsWithId
+// args		: 	tableName => the name of the table
+//				id => the id fields value to be searched in the table
+// returns 	: 	the row
+// desc		: 	called from the find method in model class
+
 exports.findRowsWithId = function(tableName,id) {
+	console.log('===========================================================================');
+	log.info('find row with id ' + id + ' from the table ' + tableName);
+	console.log('===========================================================================');
 	var obj = {};
 	obj['id'] = id;
-	return runQueryGetWhere(tableName,obj);
+	var start = Date.now();
+	var rows = runQueryGetWhere(tableName,obj);
+	if(rows) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('rows -> '.grey + util.inspect(rows));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows;
+	}
+	return null;
 }
+
+// function	: 	findRowsWithProperty
+// args		: 	tableName => the name of the table
+// 				key => the name of the field
+//				value => the value in the field to be searched
+// returns	: 	an array with the found rows
+// desc		: 	called from the where method in the model class
+
 exports.findRowsWithProp = function(tableName,key,value) {
+	console.log('===========================================================================');
+	log.info('find row from the table ' + tableName + ' where ' + key + '=' + value);
+	console.log('===========================================================================');
 	var obj = {};
 	obj[key] = value;
-	//console.log('Inside Frwp: ' + obj);
-	return runQueryGetWhere(tableName,obj);
-}
-exports.findFirstRow = function(tableName) {
 	
-	return runQueryGetAll(tableName,'first');
+	var start = Date.now();
+	return runQueryGetWhere(tableName,obj);
+	if(rows) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('rows -> '.grey + util.inspect(rows));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows;
+	}
+	return null;
 }
+
+// function	: 	findFirstRow
+// desc		: 	returns the first row in the table. called from first method in model class.
+ 
+exports.findFirstRow = function(tableName) {
+	var start = Date.now();
+	var row = runQueryGetAll(tableName,'first');
+	if(row) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('row -> '.grey + util.inspect(row));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows;
+	}
+	return null;
+}
+
+// function	: 	findLastRow
+// desc		: 	returns the last row in the table. called from the last method in model class.
+
 exports.findLastRow = function(tableName) {
-	return runQueryGetAll(tableName,'last');
+	var start = Date.now();
+	var row = runQueryGetAll(tableName,'last');
+	if(row) {
+		var end = Date.now();
+		var diff = end - start;
+		console.log('row -> '.grey + util.inspect(row));
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+		console.log('===========================================================================');
+		return rows;
+	}
+	return null;
 }
+
+// function	: 	deleteRecord
+// desc		: 	deletes the row identified by the model. called from delete method in the model instance.
+
 exports.deleteRecord = function(tableName,model) {
 	exports.deleteRowsWithId(tableName,model.id);
 }
-exports.updateRecord = function(tableName,model) {
 
-	//var schema = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
+// function	: 	updateRecord
+// desc		: 	updates the row in the table identified by the model in the table. called from update method 
+//				in the model instance
+
+exports.updateRecord = function(tableName,model) {
+	
 	var schema = getSchema(tableName);
 	var query = ' ';
 	var i = 0 ;
@@ -474,6 +749,13 @@ exports.updateRecord = function(tableName,model) {
 		i++;
 	}
 	var where = ' WHERE id=' + model.id; 
-
-	runQuery('UPDATE ' + tableName + ' SET ' + query + where + ';');
+	var start = Date.now();
+	var err = runQuery('UPDATE ' + tableName + ' SET ' + query + where + ';');
+	var end = Date.now();
+	var diff = end-start;
+	if(!err) {
+		log.info('Sucess '.green + 'the query took '.grey + diff + ' MS');
+	}
+	console.log('===========================================================================');
+	return err;
 }

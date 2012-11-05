@@ -1,3 +1,7 @@
+// @Author : Ameen Ahmed
+// exceptions.js :
+// This file contains some functions return back the html for the common exceptions
+
 exports.templateMissing = function(url) {
 	return '<h1>Template is Missing</h1>' +
 			'<p>Missing template '+url+', Searched in : '+process.cwd()+'/app/views</p>';
