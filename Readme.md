@@ -7,12 +7,14 @@ in Nails is similar to ROR.
 
 ### Installation ###
 
-Installing nails using npm (not yet implemented :P)
+1. Installing nails using npm (not yet implemented :P)
 <code>
-	npm install nails
+	<p>
+		npm install nails
+	</p>
 </code>
     
-Make using github repo (Please stay tuned)
+2. Make using github repo (Please stay tuned)
 <code>
 	$ git clone https://github.com/AmeenAhmed/nails.git
 	$ make install
