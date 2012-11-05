@@ -8,11 +8,9 @@ in Nails is similar to ROR.
 ### Installation ###
 
 1. Installing nails using npm (not yet implemented :P)
-<p>
-<code>
+<pre><code>
 	npm install nails
-</code>
-</p>   
+</code></pre>   
 2. Make using github repo (Please stay tuned)
 <code>
 	$ git clone https://github.com/AmeenAhmed/nails.git
