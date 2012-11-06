@@ -1,0 +1,38 @@
+{
+  "name": "nails",
+  "description": "Ruby on Rails inspired framework for node",
+  "version": "0.1.0",
+  "homepage": "https://github.com/AmeenAhmed/nails",
+  "author": {
+    "name": "Ameen Ahmed",
+    "email": "ameen.ahmed.b@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/AmeenAhmed/nails.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AmeenAhmed/nails/issues"
+  },
+  
+  "main": "nails",
+  "engines": {
+    "node": "0.8"
+  },
+  "preferGlobal": "true",
+  "bin": {
+    "filesearch" : "nails.js"
+  },
+  "dependencies": {
+  	"ejs": "0.8.x",
+  	"sqlite3": "2.1.5",
+  	"colors": "0.6.x",
+  	"exec-sync": "0.1.x",
+  	"keygrip": "0.2.x",
+  	"inflection": "1.2.x",
+  	"cookies": "0.3.x",
+  	"fibers": "0.6.9",
+  	"jstoxml": "0.1.x"
+  },
+  "keywords": []
+}
