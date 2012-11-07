@@ -24,7 +24,7 @@ exports.start_server = function() {
 	process.on('uncaughtException', function(err) {
 		log.error(err.message);
 					
-		res.end(err.stack);
+		//res.end(err.stack);
 	});
 	// creating the server and listening to the port
 	var server = http.createServer(function(req,res) {
@@ -45,7 +45,7 @@ exports.start_server = function() {
 				
 				
 				// get the file router.js to call the route function
-				var router = require(process.env["NAILS_PATH"] + '/scripts/router.js');
+				var router = require('scripts/router.js');
 				
 				// if the request is a GET reqest just parse the url for params
 				// if the request is a POST request wait for the data to arrive and 
