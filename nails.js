@@ -12,6 +12,9 @@ var repl = require('repl');
 var colors = require('colors');
 
 
+console.log();
+process.exit(0);
+
 
 function printCreateMessage(title,message) {
 	console.log('\t' + title.green+'\t' + message)
@@ -56,39 +59,39 @@ if(process.argv[2] == 'new') {
 
 	printCreateMessage('create', process.argv[3] + '/app' +'/views/layouts/application.html.ejs' );
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts/application.html.ejs' ,
-			fs.readFileSync('./resources/layouts/application.html.ejs','utf-8'),
+			fs.readFileSync(__dirname + '/resources/layouts/application.html.ejs','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/config/routes.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/routes.js' ,
-			fs.readFileSync('./resources/config/routes.js','utf-8'),
+			fs.readFileSync(__dirname+'/resources/config/routes.js','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/config/environment.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/environment.js' ,
-			fs.readFileSync('./resources/config/environment.js','utf-8'),
+			fs.readFileSync(__dirname+'/resources/config/environment.js','utf-8'),
 			'utf-8');
 	
 	printCreateMessage('create', process.argv[3] + '/config/application.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/application.js' ,
-			fs.readFileSync('./resources/config/application.js','utf-8'),
+			fs.readFileSync(__dirname+'/resources/config/application.js','utf-8'),
 			'utf-8');
 	
 	printCreateMessage('create', process.argv[3] + '/public/404.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/404.html' ,
-			fs.readFileSync('./resources/public/404.html','utf-8'),
+			fs.readFileSync(__dirname+'/resources/public/404.html','utf-8'),
 			'utf-8');
 
 
 	printCreateMessage('create', process.argv[3] + '/public/403.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/403.html' ,
-			fs.readFileSync('./resources/public/403.html','utf-8'),
+			fs.readFileSync(__dirname+'/resources/public/403.html','utf-8'),
 			'utf-8');
 
 
 	printCreateMessage('create', process.argv[3] + '/public/index.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/index.html' ,
-			fs.readFileSync('./resources/public/index.html','utf-8'),
+			fs.readFileSync(__dirname+'/resources/public/index.html','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/public/js');
