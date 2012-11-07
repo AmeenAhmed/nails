@@ -56,39 +56,39 @@ if(process.argv[2] == 'new') {
 
 	printCreateMessage('create', process.argv[3] + '/app' +'/views/layouts/application.html.ejs' );
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/app' +'/views/layouts/application.html.ejs' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/layouts/application.html.ejs','utf-8'),
+			fs.readFileSync('./resources/layouts/application.html.ejs','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/config/routes.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/routes.js' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/routes.js','utf-8'),
+			fs.readFileSync('./resources/config/routes.js','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/config/environment.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/environment.js' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/environment.js','utf-8'),
+			fs.readFileSync('./resources/config/environment.js','utf-8'),
 			'utf-8');
 	
 	printCreateMessage('create', process.argv[3] + '/config/application.js');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/config/application.js' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/config/application.js','utf-8'),
+			fs.readFileSync('./resources/config/application.js','utf-8'),
 			'utf-8');
 	
 	printCreateMessage('create', process.argv[3] + '/public/404.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/404.html' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/404.html','utf-8'),
+			fs.readFileSync('./resources/public/404.html','utf-8'),
 			'utf-8');
 
 
 	printCreateMessage('create', process.argv[3] + '/public/403.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/403.html' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/403.html','utf-8'),
+			fs.readFileSync('./resources/public/403.html','utf-8'),
 			'utf-8');
 
 
 	printCreateMessage('create', process.argv[3] + '/public/index.html');
 	fs.writeFileSync(process.cwd() + '/' + process.argv[3] + '/public/index.html' ,
-			fs.readFileSync(process.env['NAILS_PATH'] + '/resources/public/index.html','utf-8'),
+			fs.readFileSync('./resources/public/index.html','utf-8'),
 			'utf-8');
 
 	printCreateMessage('create', process.argv[3] + '/public/js');
@@ -114,7 +114,7 @@ if(!fs.existsSync(process.cwd() + '/.nails')) {
 }
 
 if(process.argv[2] == 'server' || process.argv[2] == 's') {
-	var server = require(process.env['NAILS_PATH'] + '/scripts/server.js');
+	var server = require('./scripts/server.js');
 	console.log("Server starting...".grey);
 	server.start_server();
 	var config = require(process.cwd() + '/config/application.js').config;
