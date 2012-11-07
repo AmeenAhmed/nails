@@ -21,7 +21,7 @@
   },
   "preferGlobal": "true",
   "bin": {
-    "filesearch" : "nails.js"
+    "nails" : "nails.js"
   },
   "dependencies": {
   	"ejs": "0.8.x",
