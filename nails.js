@@ -1,3 +1,4 @@
+#! /usr/bin/env node
 // @Author : Ameen Ahmed
 // nails.js :
 // This file is the main nails script which handles all the tasks like creation of an application and generating
