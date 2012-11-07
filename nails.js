@@ -12,9 +12,6 @@ var repl = require('repl');
 var colors = require('colors');
 
 
-console.log();
-process.exit(0);
-
 
 function printCreateMessage(title,message) {
 	console.log('\t' + title.green+'\t' + message)
