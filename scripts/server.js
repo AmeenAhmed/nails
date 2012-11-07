@@ -45,7 +45,7 @@ exports.start_server = function() {
 				
 				
 				// get the file router.js to call the route function
-				var router = require('./scripts/router.js');
+				var router = require('./router.js');
 				
 				// if the request is a GET reqest just parse the url for params
 				// if the request is a POST request wait for the data to arrive and 

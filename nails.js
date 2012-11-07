@@ -127,18 +127,18 @@ if(process.argv[2] == 'server' || process.argv[2] == 's') {
 
 if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(process.cwd() + '/.nails')) {
 	if(process.argv[3] == 'controller') {
-		printCreateMessage('generate','contoller ' + process.argv[4]);
+		printCreateMessage('generate','controller ' + process.argv[4]);
 		if(process.argv[4]) {
-			
-			printCreateMessage('create','app/controllers/' + process.argv[4] + '_controller.js');
-			fs.writeFileSync(process.cwd() + '/app/controllers/' + process.argv[4] + '_controller.js',
+			var controllerName = process.argv[4].toLowerCase();
+			printCreateMessage('create','app/controllers/' + controllerName + '_controller.js');
+			fs.writeFileSync(process.cwd() + '/app/controllers/' +controllerName + '_controller.js',
 				'exports.' + process.argv[4] + ' = {\n\n\n}');
 			
-			printCreateMessage('create','app/views/' + process.argv[4]);
-			fs.mkdirSync(process.cwd() + '/app/views/' + process.argv[4]);
+			printCreateMessage('create','app/views/' + controllerName);
+			fs.mkdirSync(process.cwd() + '/app/views/' + controllerName);
 			
-			printCreateMessage('create','app/helpers/' + process.argv[4] + '_helper.js');
-			fs.writeFileSync(process.cwd() + '/app/helpers/' + process.argv[4] + '_helper.js',
+			printCreateMessage('create','app/helpers/' + controllerName + '_helper.js');
+			fs.writeFileSync(process.cwd() + '/app/helpers/' +controllerName + '_helper.js',
 				'exports.' + process.argv[4] + ' = {\n\n\n}');
 		} else {
 			console.log('How can i generate the [' + process.argv[3] + '] without a name ?');

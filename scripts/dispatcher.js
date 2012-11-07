@@ -39,7 +39,7 @@ exports.runAndRender = function(controllerName,actionName,url,params,request,res
 	
 	// get the controller with the controllerName
 	var controller = require(process.cwd() + '/app/controllers/' + controllerName + '_controller.js');
-
+	
 	// The context object which is to be sent to the vm module when the action code is executed.
 	// the action function will see these things in its global scope
 	var context = {
