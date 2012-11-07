@@ -132,7 +132,7 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 			var controllerName = process.argv[4].toLowerCase();
 			printCreateMessage('create','app/controllers/' + controllerName + '_controller.js');
 			fs.writeFileSync(process.cwd() + '/app/controllers/' +controllerName + '_controller.js',
-				'exports.' + process.argv[4] + ' = {\n\n\n}');
+				'exports.' + controllerName + ' = {\n\n\n}');
 			
 			printCreateMessage('create','app/views/' + controllerName);
 			fs.mkdirSync(process.cwd() + '/app/views/' + controllerName);
