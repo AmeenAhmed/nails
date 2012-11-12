@@ -11,10 +11,16 @@ in Nails is similar to ROR.
 <br/>
 <pre>
 	$ npm install nails
-</pre>   
-2. Make using github repo (Please stay tuned)
-<br/>
+</pre>
+
+### Creating a new application ###
+
 <pre>
-	$ git clone https://github.com/AmeenAhmed/nails.git
-	$ make install
+	$ nails new blog
+</pre>
+
+### generating a controller ###
+
+<pre>
+	$ nails generate controller Home
 </pre>
