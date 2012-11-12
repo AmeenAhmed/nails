@@ -24,3 +24,14 @@ $ nails new blog
 <pre>
 $ nails generate controller Home
 </pre>
+
+### Generating a model ###
+
+<pre>
+$ nails generate model User name:string email:string
+</pre>
+
+### Starting the server ###
+<pre>
+$ nails server
+</pre>
