@@ -8,19 +8,19 @@ in Nails is similar to ROR.
 ### Installation ###
 
 1. Installing nails using npm (not yet implemented :P)
-<br/>
+
 <pre>
-	$ npm install nails
+$ npm install nails
 </pre>
 
 ### Creating a new application ###
 
 <pre>
-	$ nails new blog
+$ nails new blog
 </pre>
 
-### generating a controller ###
+### Generating a controller ###
 
 <pre>
-	$ nails generate controller Home
+$ nails generate controller Home
 </pre>
