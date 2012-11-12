@@ -100,7 +100,7 @@ function generateTimestamp() {
 	var minutes = prefixZero(date.getMinutes());
 	var seconds = prefixZero(date.getSeconds());
 
-	return date.getYear() + month + dateNum + hours + minutes + seconds;
+	return date.getYear() + "" + month + "" +  dateNum + "" + hours + "" + minutes + "" + seconds;
 }
 exports.generateTimestamp = generateTimestamp;
 

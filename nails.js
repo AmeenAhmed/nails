@@ -10,6 +10,7 @@ var dbase = require('./scripts/dbase.js');
 var util = require('util');
 var repl = require('repl');
 var colors = require('colors');
+var inflection = require('inflection');
 
 
 
@@ -151,7 +152,7 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 				for(var i=0;i<len;i++) {
 					params.push(process.argv[5+i]);
 				}
-				var modelName = process.argv[4];
+				var modelName = process.argv[4].toLowerCase();
 				//console.log(params);
 				printCreateMessage('create','app/models/' + modelName + '.js');
 				
@@ -170,10 +171,10 @@ if((process.argv[2] == 'generate' || process.argv[2] == 'g') && fs.existsSync(pr
 			 		paramsObject += '\n\t\t\'' + obj[0] + '\' : \'' + obj[1] + '\'';
 			 	}
 			 	paramsObject += '\n\t}';
-			 	
+			 	var tableName = inflection.pluralize(modelName); 
 			 	fs.writeFileSync(process.cwd() + '/db/migrate/' + timestamp + '_Create' + modelName + '.js',
-			 		'exports.migrate = {\n\n\nup : function() {\n\tthis.createTable(\''+modelName+'\','+paramsObject+');\n\n},\n\n' +
-			 		'down : function() {\n\n\tthis.dropTable(\'' + modelName + '\');\n\n}\n\n}','utf-8');
+			 		'exports.migrate = {\n\n\nup : function() {\n\tthis.createTable(\''+tableName+'\','+paramsObject+');\n\n},\n\n' +
+			 		'down : function() {\n\n\tthis.dropTable(\'' + tableName + '\');\n\n}\n\n}','utf-8');
 			
 			 	var tables = require(process.cwd() + '/db/tables.js').tables;
 			 	tables.push(modelName);

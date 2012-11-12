@@ -14,6 +14,7 @@ var dbase = require('./dbase');
 var util = require('util');
 var viewHelpers = require('./view_helpers');
 var log = require('./../log');
+var inflection = require('inflection');
 
 
 // function	: 	runAndRender
@@ -284,9 +285,10 @@ function initModels() {
 
 
 	for(var m in modelsArray) {
-		var modelName = modelsArray[m].split('.')[0];
+		var modelName = inflection.camelize(modelsArray[m].split('.')[0]);
+		var tableName = inflection.pluralize(modelsArray[m].split('.')[0]);
 		mods.push(modelName);
-		modelSchemas[modelName] = require(process.cwd() + '/db/' + modelName + '_schema.js').schema;
+		modelSchemas[modelName] = require(process.cwd() + '/db/' + tableName + '_schema.js').schema;
 	}
 	
 	// the model instance object which is returned by model class methods which contain one 
@@ -294,12 +296,13 @@ function initModels() {
 
 	function modelInstance(tableName,props,obj) {
 		this.table_name = tableName;
+		this.modelName = inflection.singularize(tableName);
 		this.id = undefined;
 		for(var p in props) {
 			this[p] = undefined;
 		}
 		
-		var model = require(process.cwd() + '/app/models/' + this.table_name + '.js');
+		var model = require(process.cwd() + '/app/models/' + this.modelName + '.js');
 		
 		for(var m in model[this.table_name]) {
 			this[m] = model[this.table_name][m];
@@ -469,9 +472,10 @@ function initModels() {
 	// The model class function which has the class methods for the model
 	function modelClass(tableName,props) {
 
-		this.table_name = tableName;
+		this.table_name = inflection.pluralize(tableName.toLowerCase());
+		this.modelName = tableName;
 		this.properties = props;
-		var model = require(process.cwd() + '/app/models/' + this.table_name + '.js');
+		var model = require(process.cwd() + '/app/models/' + this.modelName + '.js');
 		
 		for(var m in model[this.table_name]) {
 			this[m] = model[this.table_name][m];
