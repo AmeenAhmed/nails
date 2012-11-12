@@ -117,10 +117,16 @@ if(!fs.existsSync(process.cwd() + '/.nails')) {
 if(process.argv[2] == 'server' || process.argv[2] == 's') {
 	var server = require('./scripts/server.js');
 	console.log("Server starting...".grey);
-	server.start_server();
+	
 	var config = require(process.cwd() + '/config/application.js').config;
-	var port = '' + config.server.port;
-	console.log('Nails 0.1.0 application started on '.grey+'http://localhost:'.green + port.green);
+	var port = 0;
+	if(process.argv[3]) {
+		port = parseInt(process.argv[3]);
+	} else {
+		port = config.server.port;	
+	}
+	server.start_server(port);
+	console.log('Nails 0.1.0 application started on '.grey+'http://localhost:'.green + port.toString().green);
 	console.log("Ctrl-C to shutdown the server".grey);
 	log.info("Node version : ".grey + process.version.green);
 }

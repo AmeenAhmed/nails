@@ -6,7 +6,7 @@
 // args : nil
 // desc : creates and starts the http server
 
-exports.start_server = function() {
+exports.start_server = function(port) {
 	
 	var http = require('http');
 	var url = require('url');
@@ -16,10 +16,7 @@ exports.start_server = function() {
 	var cookies = require('./cookies');
 	var log = require('./../log');
 
-	// loading configs from the application.js file
-	var config = require(process.cwd() + '/config/application.js').config;
-	// port number to be used to start the server
-	var port = config.server.port;
+	
 	
 	process.on('uncaughtException', function(err) {
 		log.error(err.message);
@@ -80,6 +77,6 @@ exports.start_server = function() {
 			log.error(exception);
 		}
 		
-	}).listen(port); // listen to the port number in the application.js config file
+	}).listen(port); // listen to the port number passed
 	
 }

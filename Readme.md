@@ -33,5 +33,5 @@ $ nails generate model User name:string email:string
 
 ### Starting the server ###
 <pre>
-$ nails server
+$ nails server [port]
 </pre>
